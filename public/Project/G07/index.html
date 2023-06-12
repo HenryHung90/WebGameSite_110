@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phaser game test.</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
+
+  <!-- 記得link字體 --> 
+
+  <link rel="preload" as="font" href="./assets/fonts/Cubic_11_1.013_R.ttf" type="font/ttf" crossOrigin="anonymous" />
+
+  <style type="text/css">
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    /* font-family名稱設立及連結 */
+    @font-face {
+      font-family: 'CustomFont';
+      src: url('./assets/fonts/Cubic_11_1.013_R.ttf');
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 場景控制器 -->
+  <script src="./js/controller.js"></script>
+
+  
+  <!-- 場景 -->
+  <script src="./js/scenes/main_menu.js"></script>
+  <script src="./js/scenes/pause_menu.js"></script>
+
+  <script src="./js/scenes/stage1.js"></script>
+  <script src="./js/scenes/stage2.js"></script>
+
+  <!-- 通用函式 -->
+  <script src="./js/utility_functions/universal/system_functions.js"></script>
+
+  <!-- 主體 -->
+  <script src="./js/index.js"></script>
+</body>
+
+</html>

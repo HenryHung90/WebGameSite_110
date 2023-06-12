@@ -1,0 +1,9 @@
+#GroupHome_G09{
+    background-image: url('../components/image/G09.png');
+    background-position: center;
+}
+#GroupHomeImage_G09{
+    background-image: url('../components/image/G09.png');
+    background-position: right;
+    background-size: 100% 100%;
+}

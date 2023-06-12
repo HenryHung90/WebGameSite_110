@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <title>防疫新運動場景一</title>
+</head>
+
+<body>
+    <script>
+        /*車子翻轉還沒成功*/
+        const config = {
+            type: Phaser.AUTO,
+            width: 960,
+            height: 540,
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            },
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 700 },
+                    debug: false
+                }
+            }
+        };
+
+        var game = new Phaser.Game(config);
+        /*UI*/
+        let startBtn, pauseBtn, homeBtn, restartBtn, continueBtn;
+        let itembox, show_drop, show_mask, show_dropnum, show_masknum, bloodbox, show_bloodnum, show_time, show_gasmasknum;
+        let ibF, ibG, ibH, ibshow_alcohol, ibshow_mask, ibshow_gasmask;
+        /*元素*/
+        let ground, platforms, drop, mask, alcohol, gasmask, player, mobs1, mobs2, mobs3, car, cones, hole, holebg, randombox, blood;
+        let maskB, mobs1B, mobs2B, mobs3B;
+        /*控制*/
+        let cursors;
+        /*變數*/
+        let time = 90;
+        let isStart = false;
+        let isLeft = false;
+        let isCarLeft = true;
+        let isMobs1Left = true;
+        let isMobs2Left = true;
+        let isMobs3Left = true;
+        let isMaskBOut = false;
+        let drop_num = 0;
+        let mask_num = 5;
+        let gasmask_num = 0;
+        let blood_num = 10;
+        var bonus, mobs, mobsB, F, G, H;
+
+        function preload() {
+            /*場景*/
+            this.load.image('bg', './_img/bgDaylight.PNG');
+            this.load.image('bg1', './_img/bgDaylight1.PNG');
+            this.load.image('bg2', './_img/bgDaylight2.PNG');
+            this.load.image('bg3', './_img/bgDaylight3.PNG');
+            this.load.image('ground', './_img/ground.png');
+            this.load.image('platforms', './_img/platform.png');
+            this.load.image('btnStart', './_img/button.jpg');
+            this.load.image('paddle', './_img/paddle.png')
+            /*障礙*/
+            this.load.spritesheet('cones', './_img/cones.PNG', { frameWidth: 138, frameHeight: 165 });
+            this.load.spritesheet('car', './_img/car.PNG', { frameWidth: 280, frameHeight: 236 });
+            this.load.image('hole', './_img/hole.PNG');
+            this.load.image('holebg', './_img/holebg.PNG');
+            //this.load.spritesheet('bird', './_img/bird.PNG', { frameWidth: 135, frameHeight: 145 });
+            /*掉落物*/
+            this.load.image('drop', './_img/drop.PNG');
+            this.load.image('mask', './_img/mask.PNG');
+            this.load.image('randombox', './_img/randombox.png');
+            this.load.image('gasmask', './_img/gasmask.png');
+            this.load.spritesheet('mobsBullet', './_img/mobsBullet.png', { frameWidth: 103, frameHeight: 55 });
+            /*道具*/
+            this.load.image('alcohol1', './_img/alcohol1.PNG');
+            this.load.image('alcohol2', './_img/alcohol2.PNG');
+            this.load.image('alcohol3', './_img/alcohol3.PNG');
+            this.load.image('pBonus1', './_img/Bonus_Positive1.PNG');
+            this.load.image('pBonus2', './_img/Bonus_Positive2.PNG');
+            this.load.image('nBonus1', './_img/Bonus_Negative1.PNG');
+            this.load.image('nBonus2', './_img/Bonus_Negative2.PNG');
+            /*人物*/
+            this.load.spritesheet('player', './_img/player.png', { frameWidth: 128, frameHeight: 197 });
+            this.load.spritesheet('mobs1', './_img/mobs1.PNG', { frameWidth: 141, frameHeight: 221 });
+            /*UI*/
+            this.load.image('itembox', './_img/itembox.PNG');
+            this.load.image('bloodbox', './_img/livebox.PNG');
+            this.load.spritesheet('lives', './_img/lives.PNG', { frameWidth: 470, frameHeight: 75 });
+            this.load.image('menubg',  './_img/BGMenu.PNG');
+            this.load.image('pausebg',  './_img/BGPaused.PNG');
+            this.load.image('pause',  './_img/buttonpause.PNG');
+            this.load.image('continue',  './_img/buttoncontinue.PNG');
+            this.load.image('home',  './_img/buttonhome.PNG');
+            this.load.image('restart', './_img/buttonrestart.PNG');
+        }
+        
+        function create() {
+            cursors = this.input.keyboard.createCursorKeys();
+            G = this.input.keyboard.addKey('G');
+            H = this.input.keyboard.addKey('H');
+            this.physics.world.setBounds(0, 0, 3836, 540);
+            /*背景*/
+            this.add.image(0, 0, 'bg').setOrigin(0, 0).setScale(0.5);
+            this.add.image(959, 0, 'bg1').setOrigin(0, 0).setScale(0.5);
+            this.add.image(1918, 0, 'bg2').setOrigin(0, 0).setScale(0.5);
+            this.add.image(2877, 0, 'bg3').setOrigin(0, 0).setScale(0.5);
+            /*地板*/
+            ground = this.physics.add.staticGroup();
+            ground.create(-960, 466, 'ground').setScale(0.5).setOrigin(0, 0.5).refreshBody();
+            ground.create(0, 466, 'ground').setScale(0.5).setOrigin(0, 0.5).refreshBody();
+            ground.create(959, 466, 'ground').setScale(0.5).setOrigin(0, 0.5).refreshBody();
+            ground.create(1918, 466, 'ground').setScale(0.5).setOrigin(0, 0.5).refreshBody();
+            ground.create(2877, 466, 'ground').setScale(0.5).setOrigin(0, 0.5).refreshBody();
+            ground.create(3836, 466, 'ground').setScale(0.5).setOrigin(0, 0.5).refreshBody();
+            /*平台*/
+            platforms = this.physics.add.staticGroup();
+            platforms.create(500, Phaser.Math.Between(270, 310), 'platforms');
+            platforms.create(950, Phaser.Math.Between(220, 240), 'platforms');
+            platforms.create(1700, Phaser.Math.Between(270, 310), 'platforms');
+            platforms.create(2700, Phaser.Math.Between(270, 310), 'platforms');
+            platforms.create(3150, Phaser.Math.Between(220, 240), 'platforms');
+            platforms.create(3600, Phaser.Math.Between(270, 310), 'platforms');
+            /*移動平台*/
+            paddle = this.physics.add.image(2150, 350, 'paddle');
+            paddle.body.allowGravity = false;
+            paddle.setPushable(false);
+            paddle.scene.tweens.add({
+                targets: paddle,
+                y: 150,
+                ease: 'Linear',
+                duration: 2000,
+                repeat: -1,
+                yoyo: true,
+            });
+            /*玩家*/
+            player = this.physics.add.sprite(100, 100, 'player').setScale(0.35).refreshBody();
+            player.setCollideWorldBounds(true);
+            /*酒精滴滴*/
+            drop = this.physics.add.group();
+            for (let i = 0; i < 7; i++) {
+                drop.create(Phaser.Math.Between(1050, 3800), Phaser.Math.Between(0, 320), 'drop').setScale(0.5);
+            }
+            /*口罩*/
+            mask = this.physics.add.group();
+            for (let i = 0; i < 7; i++) {
+                mask.create(Phaser.Math.Between(1050, 3800), Phaser.Math.Between(0, 320), 'mask').setScale(0.35);
+            }
+            maskB = this.physics.add.image(player.x, player.y, 'mask').setScale(0.3);
+            maskB.body.allowGravity = false;
+            maskB.setVisible(false);
+            /*防毒面具*/
+            gasmask = this.physics.add.group();
+            gasmask.create(Phaser.Math.Between(1050, 3800), Phaser.Math.Between(0, 320), 'gasmask').setScale(0.4);
+            /*問號盒子*/
+            randombox = this.physics.add.group();
+            randombox.create(2150, 280, 'randombox').setScale(0.45);
+            bonus = [this.add.image(config.width / 2, 50, 'pBonus1').setScale(0),
+            this.add.image(config.width / 2, 50, 'pBonus2').setScale(0),
+            this.add.image(config.width / 2, 50, 'nBonus1').setScale(0),
+            this.add.image(config.width / 2, 50, 'nBonus2').setScale(0)];
+            for (let i = 0; i < bonus.length; i++) {
+                bonus[i].scrollFactorX = 0;
+                bonus[i].setVisible(false);
+            }
+            /*障礙*/
+            car = this.physics.add.sprite(4500, Phaser.Math.Between(0, 320), 'car').setScale(0.30);
+            car.setPushable(false);
+            holebg = this.add.group();
+            holebg.create(2000, 356, 'holebg').setScale(0.5);
+            holebg.create(3150, 356, 'holebg').setScale(0.5);
+            hole = this.add.group();
+            hole.create(2000, 396, 'hole').setScale(0.5);
+            hole.create(3150, 396, 'hole').setScale(0.5);
+            cones = this.physics.add.group();
+            cones.create(1000, 100, 'cones').setScale(0.35);
+            cones.create(2700, 100, 'cones').setScale(0.35);
+            cones.children.iterate(function (child) {
+                child.setPushable(false);
+            });
+            /*小怪*/
+            mobs1 = this.physics.add.sprite(1475, 100, 'mobs1').setScale(0.35);
+            mobs2 = this.physics.add.sprite(2450, 100, 'mobs1').setScale(0.35);
+            mobs3 = this.physics.add.sprite(3300, 100, 'mobs1').setScale(0.35);
+            mobs1B = this.physics.add.sprite(mobs1.x, mobs1.y - 20, 'mobsBullet').setVisible(false);
+            mobs2B = this.physics.add.sprite(mobs2.x, mobs2.y - 20, 'mobsBullet').setVisible(false);
+            mobs3B = this.physics.add.sprite(mobs3.x, mobs3.y - 20, 'mobsBullet').setVisible(false);
+            mobs1B.body.allowGravity = false;
+            mobs2B.body.allowGravity = false;
+            mobs3B.body.allowGravity = false;
+            mobs = { mobs1, mobs2, mobs3 };
+            mobsB = { mobs1B, mobs2B, mobs3B };
+            /*相機*/
+            let camera = this.cameras.main;
+            camera.setBounds(0, 0, 3836, 540);
+            camera.startFollow(player);
+            /*UI*/
+            startBtn = this.add.image(config.width / 2, config.height / 2, 'btnStart')
+                .setInteractive()
+                .on('pointerup', () => {
+                    startBtn.setVisible(false);
+                    isStart = true;
+                    car.anims.play('car', true);
+                    car.setVelocityX(-200);
+                    cones.children.iterate(function (child) {
+                        child.anims.play('cones', true);
+                    });
+                    this.time.addEvent({
+                        loop: true,
+                        delay: 1000,
+                        callback: showTime,
+                        callbackScope: this
+                    });
+                    this.time.addEvent({
+                        loop: true,
+                        delay: 30000,
+                        callback: newItem,
+                        callbackScope: this
+                    })
+                    this.time.addEvent({
+                        loop: true,
+                        delay: 2000,
+                        callback: mobsAttack,
+                        callbackScope: this
+                    })
+                });
+            pauseBtn = this.add.image(920, 500, 'pause')
+                .setScale(0.5)
+                .setScrollFactor(0)
+                .setInteractive()
+                .on('pointerover', () => {
+                    pauseBtn.setScale(0.6);
+                })
+                .on('pointerout', () => {
+                    pauseBtn.setScale(0.5);
+                })
+                .on('pointerup', () => {
+                    //切換至暫停場景
+                });
+            itembox = this.add.image(config.width / 2, 490, 'itembox').setScale(0.5).setScrollFactor(0);
+            ibH = this.add.text(530, 500, 'H', { align: 'center', fontSize: '20px' }).setScrollFactor(0);
+            ibG = this.add.text(457, 500, 'G', { align: 'center', fontSize: '20px' }).setScrollFactor(0);
+            ibF = this.add.text(383, 500, '', { align: 'center', fontSize: '20px' }).setScrollFactor(0);
+            show_drop = this.add.image(32, 32, 'drop').setScale(0.5).setScrollFactor(0);
+            show_mask = this.add.image(32, 80, 'mask').setScale(0.5).setScrollFactor(0);
+            show_dropnum = this.add.text(75, 16, drop_num, { align: 'center', fontSize: '25px' }).setScrollFactor(0);
+            show_masknum = this.add.text(75, 64, mask_num, { align: 'center', fontSize: '25px' }).setScrollFactor(0);
+            bloodbox = this.add.image(770, 40, 'bloodbox').setScale(0.5).setScrollFactor(0);
+            blood = this.add.image(770, 40, 'lives', [9]).setScale(0.5).setScrollFactor(0);
+            show_bloodnum = this.add.text(900, 28, blood_num, { align: 'center', fontSize: '25px', color: 'rgba(255, 0, 0, 1)' }).setScrollFactor(0);
+            show_time = this.add.text(30, 480, time + 's', { align: 'center', fontSize: '30px', color: 'rgba(0, 0, 0, 1)' }).setScrollFactor(0);
+            show_gasmasknum = this.add.text(562, 503, gasmask_num, { align: 'center', fontSize: '15px' }).setScrollFactor(0);
+            ibshow_alcohol = this.add.image(405, 490, 'alcohol1').setScale(0.4).setScrollFactor(0).setTint(0x000000);
+            ibshow_mask = this.add.image(480, 485, 'mask').setScale(0.4).setScrollFactor(0).setTint(0x000000);
+            ibshow_gasmask = this.add.image(551, 485, 'gasmask').setScale(0.3).setScrollFactor(0).setTint(0x000000);
+            /*碰撞偵測*/
+            this.physics.add.collider(drop, platforms);
+            this.physics.add.collider(drop, ground);
+            this.physics.add.collider(mask, platforms);
+            this.physics.add.collider(mask, ground);
+            this.physics.add.overlap(player, drop, colleDrop, null, this);
+            this.physics.add.overlap(player, mask, colleMask, null, this);
+            this.physics.add.overlap(player, randombox, colleBox, null, this);
+            this.physics.add.overlap(player, gasmask, colleGasmask, null, this);
+            this.physics.add.collider(player, platforms);
+            this.physics.add.collider(player, ground);
+            this.physics.add.collider(paddle, ground);
+            this.physics.add.collider(paddle, player);
+            this.physics.add.collider(car, player);
+            this.physics.add.collider(car, ground);
+            this.physics.add.collider(randombox, paddle);
+            this.physics.add.collider(cones, platforms);
+            this.physics.add.collider(cones, ground);
+            this.physics.add.collider(cones, player);
+            this.physics.add.collider(gasmask, platforms);
+            this.physics.add.collider(gasmask, ground);
+            this.physics.add.collider(mobs1, ground);
+            this.physics.add.collider(mobs1, platforms);
+            this.physics.add.collider(mobs2, ground);
+            this.physics.add.collider(mobs2, platforms);
+            this.physics.add.collider(mobs3, ground);
+            this.physics.add.collider(mobs3, platforms);
+            this.physics.add.overlap(maskB, mobs1, maskhitMobs1, null, this);
+            this.physics.add.overlap(maskB, mobs2, maskhitMobs2, null, this);
+            this.physics.add.overlap(maskB, mobs3, maskhitMobs3, null, this);
+            this.physics.add.overlap(player, mobs1B, hittedMobs, null, this);
+            this.physics.add.overlap(player, mobs2B, hittedMobs, null, this);
+            this.physics.add.overlap(player, mobs3B, hittedMobs, null, this);
+            /*人物動作動畫*/
+            this.anims.create({
+                key: 'right',
+                frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
+                frameRate: 10,
+                repeat: -1
+            });
+            this.anims.create({
+                key: 'left',
+                frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+                frameRate: 10,
+                repeat: -1
+            });
+            this.anims.create({
+                key: 'turnRight',
+                frames: [{ key: 'player', frame: 4 }],
+                frameRate: 20,
+            });
+            this.anims.create({
+                key: 'turnLeft',
+                frames: [{ key: 'player', frame: 3 }],
+                frameRate: 20,
+            });
+            this.input.on('pointerup', () => {
+                console.log(this.input.x + " " + this.input.y);
+            })
+            /*車動畫*/
+            this.anims.create({
+                key: 'carLeft',
+                frames: this.anims.generateFrameNumbers('car', { start: 0, end: 3 }),
+                frameRate: 20,
+                repeat: -1
+            });
+            this.anims.create({
+                key: 'carRight',
+                frames: this.anims.generateFrameNumbers('car', { start: 5, end: 8 }),
+                frameRate: 20,
+                repeat: -1
+            });
+            /*怪物攻擊*/
+            this.anims.create({
+                key: 'bullet',
+                frames: this.anims.generateFrameNumbers('mobsBullet', { start: 0, end: 4 }),
+                frameRate: 10,
+                repeat: 0
+            });
+            /*怪物一*/
+            this.anims.create({
+                key: 'mobs1Left',
+                frames: this.anims.generateFrameNumbers('mobs1', { start: 0, end: 3 }),
+                frameRate: 3,
+                repeat: -1
+            });
+            /*三角錐動畫*/
+            this.anims.create({
+                key: 'cones',
+                frames: this.anims.generateFrameNumbers('cones', { start: 0, end: 1 }),
+                frameRate: 10,
+                repeat: -1
+            });
+        }
+        
+        function update() {
+
+            if (isStart) {
+                mobs1.anims.play('mobs1Left', true);
+                mobs2.anims.play('mobs1Left', true);
+                mobs3.anims.play('mobs1Left', true);
+                scene1_mobsMove();
+                itemUse();
+                if (cursors.up.isDown && player.body.touching.down) {
+                    player.setVelocityY(-450);
+                }
+                if (cursors.left.isDown) {
+                    player.setVelocityX(-200);
+                    player.anims.play('left', true);
+                    isLeft = true;
+
+                } else if (cursors.right.isDown) {
+                    player.setVelocityX(200);
+                    player.anims.play('right', true);
+                    isLeft = false;
+                } else {
+                    player.setVelocityX(0);
+                    if (isLeft) {
+                        player.anims.play('turnLeft', true);
+                    }
+                    else {
+                        player.anims.play('turnRight', true);
+                    }
+                }
+
+                if (car.x <= -300) {
+                    isCarLeft = false;
+                }
+                else if (car.x >= 4500) {
+                    isCarLeft = true;
+                }
+                if (isCarLeft) {
+                    car.setVelocityX(-200);
+                    car.anims.play('carLeft', true);
+                }
+                else {
+                    car.setVelocityX(200);
+                    car.anims.play('carRight', true);
+                }
+
+            }
+            else {
+                player.anims.play('turnRight');
+            }
+
+            if ((player.x >= 1970 && player.x <= 2030 && player.y == 357.775) || player.x >= 3120 && player.x <= 3180 && player.y == 357.775) {
+                player.x = 100;
+                player.anims.play('turnRight');
+                blood_num -= 1;
+                show_bloodnum.setText(blood_num);
+            }
+
+            switch (blood_num) {
+                case 10:
+                    blood.setTexture('lives', [9]);
+                    break;
+                case 9:
+                    blood.setTexture('lives', [8]);
+                    break;
+                case 8:
+                    blood.setTexture('lives', [7]);
+                    break;
+                case 7:
+                    blood.setTexture('lives', [6]);
+                    break;
+                case 6:
+                    blood.setTexture('lives', [5]);
+                    break;
+                case 5:
+                    blood.setTexture('lives', [4]);
+                    break;
+                case 4:
+                    blood.setTexture('lives', [3]);
+                    break;
+                case 3:
+                    blood.setTexture('lives', [2]);
+                    break;
+                case 2:
+                    blood.setTexture('lives', [1]);
+                    break;
+                case 1:
+                    blood.setTexture('lives', [0]);
+                    break;
+                case 0:
+                    blood.setTexture('bloodbox');
+                    break;
+            }
+        }
+
+        function colleDrop(p, d) {
+            drop_num++;
+            show_dropnum.setText(drop_num);
+            d.destroy();
+        }
+        function colleMask(p, m) {
+            mask_num++;
+            show_masknum.setText(mask_num);
+            m.destroy();
+        }
+        function colleBox(p, b) {
+            let tmp = Phaser.Math.Between(0, 3);
+            console.log(tmp);
+            b.destroy();
+            bonus[tmp].setVisible(true);
+            bonus[tmp].scene.tweens.add({
+                targets: bonus[tmp],
+                scaleX: 0.5,
+                scaleY: 0.5,
+                ease: 'Linear',
+                duration: 2000,
+                repeat: 0,
+                yoyo: true
+            });
+            switch (tmp) {
+                case 0:
+                    drop_num += 5;
+                    show_dropnum.setText(drop_num);
+                    break;
+
+                case 1:
+                    mask_num += 5;
+                    show_masknum.setText(mask_num);
+                    break;
+
+                case 2:
+                    drop_num -= 5;
+                    show_dropnum.setText(drop_num);
+                    break;
+                case 3:
+                    mask_num -= 5;
+                    show_masknum.setText(mask_num);
+                    break;
+            }
+        }
+
+        function colleGasmask(p, g) {
+            g.destroy();
+            gasmask_num++;
+            show_gasmasknum.setText(gasmask_num);
+        }
+        function maskhitMobs1(m, M) {
+            M.disableBody(true, true);
+            mobs1B.disableBody(true, true);
+            mobs1B.setVisible(false);
+            m.setVisible(false);
+            drop_num++;
+            show_dropnum.setText(drop_num);
+        }
+        function maskhitMobs2(m, M) {
+            M.disableBody(true, true);
+            mobs2B.disableBody(true, true);
+            mobs2B.setVisible(false);
+            m.setVisible(false);
+            drop_num++;
+            show_dropnum.setText(drop_num);
+        }
+        function maskhitMobs3(m, M) {
+            M.disableBody(true, true);
+            mobs3B.disableBody(true, true);
+            mobs3B.setVisible(false);
+            m.setVisible(false);
+            drop_num++;
+            show_dropnum.setText(drop_num);
+        }
+        function hittedMobs(p, b){
+            b.disableBody(true, true);
+            blood_num -= 2;
+            show_bloodnum.setText(blood_num);
+        }
+
+        function showTime() {
+            time--;
+            show_time.setText(time + 's');
+        }
+        function newItem() {
+            for (let i = 0; i < 7; i++) {
+                drop.create(Phaser.Math.Between(0, 3800), Phaser.Math.Between(0, 320), 'drop').setScale(0.5);
+                mask.create(Phaser.Math.Between(0, 3800), Phaser.Math.Between(0, 320), 'mask').setScale(0.35);
+            }
+            for (let i = 0; i < Phaser.Math.Between(0, 2); i++) {
+                gasmask.create(Phaser.Math.Between(0, 3800), Phaser.Math.Between(0, 320), 'gasmask').setScale(0.4);
+            }
+            if (randombox.countActive() == 0) {
+                randombox.create(2150, 100, 'randombox').setScale(0.45);
+            }
+        }
+
+        function scene1_mobsMove() {
+
+            if (mobs1.x <= 1175) {
+                isMobs1Left = false;
+            }
+            else if (mobs1.x >= 1475) {
+                isMobs1Left = true;
+            }
+            if (isMobs1Left) {
+                mobs1.setVelocityX(-100);
+                mobs1.flipX = false;
+            }
+            else {
+                mobs1.setVelocityX(100);
+                mobs1.flipX = true;
+            }
+
+            if (mobs2.x <= 2150) {
+                isMobs2Left = false;
+            }
+            else if (mobs2.x >= 2450) {
+                isMobs2Left = true;
+            }
+            if (isMobs2Left) {
+                mobs2.setVelocityX(-100);
+                mobs2.flipX = false;
+            }
+            else {
+                mobs2.setVelocityX(100);
+                mobs2.flipX = true;
+            }
+
+            if (mobs3.x <= 3000) {
+                isMobs3Left = false;
+            }
+            else if (mobs3.x >= 3300) {
+                isMobs3Left = true;
+            }
+            if (isMobs3Left) {
+                mobs3.setVelocityX(-100);
+                mobs3.flipX = false;
+            }
+            else {
+                mobs3.setVelocityX(100);
+                mobs3.flipX = true;
+            }
+        }
+        function itemUse() {
+            if (gasmask_num > 0) {
+                ibshow_gasmask.setTint(0xffffff);
+                if (H.isDown) {
+                    let useGasmask = true;
+                    if (useGasmask) {
+                        blood_num += 5;
+                        show_bloodnum.setText(blood_num);
+                        gasmask_num--;
+                        show_gasmasknum.setText(gasmask_num);
+                        useGasmask = false;
+                    }
+                }
+            }
+            else {
+                ibshow_gasmask.setTint(0x000000);
+            }
+
+            if (drop_num >= 80) {
+                ibshow_alcohol.setTexture('alcohol3');
+            }
+            else if (drop_num >= 50) {
+                ibshow_alcohol.setTexture('alcohol2');
+            }
+            else if (drop_num >= 25) {
+                ibshow_alcohol.setTexture('alcohol1');
+                ibshow_alcohol.setTint(0xffffff);
+            }
+
+            if (mask_num > 0) {
+                ibshow_mask.setTint(0xffffff);
+                if (G.isDown) {
+                    if (!isMaskBOut) {
+                        mask_num--;
+                        show_masknum.setText(mask_num);
+                        isMaskBOut = true;
+                        maskB.x = player.x;
+                        maskB.y = player.y;
+                        if (isLeft) {
+                            maskB.setVisible(true);
+                            maskB.scene.tweens.add({
+                                targets: maskB,
+                                props: {
+                                    x: { value: '-=400', duration: 1000, ease: 'Linear' },
+                                    angle: { value: '-1080', duration: 1000, ease: 'Linear', repeat: 0 }
+                                },
+                                duration: 3000,
+                                repeat: 0,
+                                yoyo: false,
+                                onComplete: () => {
+                                    maskB.x = player.x;
+                                    maskB.y = player.y;
+                                    maskB.setVisible(false);
+                                    isMaskBOut = false;
+                                }
+                            })
+                        }
+                        else {
+                            maskB.setVisible(true);
+                            maskB.scene.tweens.add({
+                                targets: maskB,
+                                props: {
+                                    x: { value: '+=400', duration: 1000, ease: 'Linear' },
+                                    angle: { value: '-1080', duration: 1000, ease: 'Linear', repeat: 0 }
+                                },
+                                duration: 3000,
+                                repeat: 0,
+                                yoyo: false,
+                                onComplete: () => {
+                                    maskB.x = player.x;
+                                    maskB.y = player.y;
+                                    maskB.setVisible(false);
+                                    isMaskBOut = false;
+                                }
+                            })
+                        }
+                    }
+                }
+            }
+            else {
+                ibshow_mask.setTint(0x000000);
+            }
+        }
+        function mobsAttack() {
+            
+            mobs3B.x = mobs3.x;
+            mobs3B.y = mobs3.y - 20;
+            if (isMobs1Left) {
+                if (mobs1.active) {
+                    if(!mobs1B.active){
+                        mobs1B.enableBody(true, false);
+                    }
+                    mobs1B.x = mobs1.x;
+                    mobs1B.y = mobs1.y - 20;
+                    mobs1B.setVisible(true);
+                    mobs1B.flipX = true;
+                    mobs1B.scene.tweens.add({
+                        targets: mobs1B,
+                        props: {
+                            x: { value: '-=400', duration: 1000, ease: 'Linear' }
+                        },
+                        duration: 1000,
+                        repeat: 0,
+                        yoyo: false,
+                        onComplete: () => {
+                            mobs1B.x = mobs1.x;
+                            mobs1B.y = mobs1.y - 20;
+                            mobs1B.setVisible(false);
+                        }
+                    })
+                }
+            }
+            else {
+                if (mobs1.active) {
+                    if(!mobs1B.active){
+                        mobs1B.enableBody(true, false);
+                    }
+                    mobs1B.x = mobs1.x;
+                    mobs1B.y = mobs1.y - 20;
+                    mobs1B.setVisible(true);
+                    mobs1B.flipX = false;
+                    mobs1B.scene.tweens.add({
+                        targets: mobs1B,
+                        props: {
+                            x: { value: '+=400', duration: 1000, ease: 'Linear' }
+                        },
+                        duration: 1000,
+                        repeat: 0,
+                        yoyo: false,
+                        onComplete: () => {
+                            mobs1B.x = mobs1.x;
+                            mobs1B.y = mobs1.y - 20;
+                            mobs1B.setVisible(false);
+                        }
+                    })
+                }
+            }
+
+            if (isMobs2Left) {
+                if (mobs2.active) {
+                    if(!mobs2B.active){
+                        mobs2B.enableBody(true, false);
+                    }
+                    mobs2B.x = mobs2.x;
+                    mobs2B.y = mobs2.y - 20;
+                    mobs2B.setVisible(true);
+                    mobs2B.flipX = true;
+                    mobs2B.scene.tweens.add({
+                        targets: mobs2B,
+                        props: {
+                            x: { value: '-=400', duration: 1000, ease: 'Linear' }
+                        },
+                        duration: 1000,
+                        repeat: 0,
+                        yoyo: false,
+                        onComplete: () => {
+                            mobs2B.x = mobs2.x;
+                            mobs2B.y = mobs2.y - 20;
+                            mobs2B.setVisible(false);
+                        }
+                    })
+                }
+            }
+            else {
+                if (mobs2.active) {
+                    if(!mobs2B.active){
+                        mobs2B.enableBody(true, false);
+                    }
+                    mobs2B.x = mobs2.x;
+                    mobs2B.y = mobs2.y - 20;
+                    mobs2B.setVisible(true);
+                    mobs2B.flipX = false;
+                    mobs2B.scene.tweens.add({
+                        targets: mobs2B,
+                        props: {
+                            x: { value: '+=400', duration: 1000, ease: 'Linear' }
+                        },
+                        duration: 1000,
+                        repeat: 0,
+                        yoyo: false,
+                        onComplete: () => {
+                            mobs2B.x = mobs2.x;
+                            mobs2B.y = mobs2.y - 20;
+                            mobs2B.setVisible(false);
+                        }
+                    })
+                }
+            }
+
+            if (isMobs3Left) {
+                if (mobs3.active) {
+                    if(!mobs3B.active){
+                        mobs3B.enableBody(true, false);
+                    }
+                    mobs3B.x = mobs3.x;
+                    mobs3B.y = mobs3.y - 20;
+                    mobs3B.setVisible(true);
+                    mobs3B.flipX = true;
+                    mobs3B.scene.tweens.add({
+                        targets: mobs3B,
+                        props: {
+                            x: { value: '-=400', duration: 1000, ease: 'Linear' }
+                        },
+                        duration: 1000,
+                        repeat: 0,
+                        yoyo: false,
+                        onComplete: () => {
+                            mobs3B.x = mobs3.x;
+                            mobs3B.y = mobs3.y - 20;
+                            mobs3B.setVisible(false);
+                        }
+                    })
+                }
+            }
+            else {
+                if (mobs3.active) {
+                    if(!mobs3B.active){
+                        mobs3B.enableBody(true, false);
+                    }
+                    mobs3B.x = mobs3.x;
+                    mobs3B.y = mobs3.y - 20;
+                    mobs3B.setVisible(true);
+                    mobs3B.flipX = false;
+                    mobs3B.scene.tweens.add({
+                        targets: mobs3B,
+                        props: {
+                            x: { value: '+=400', duration: 1000, ease: 'Linear' }
+                        },
+                        duration: 1000,
+                        repeat: 0,
+                        yoyo: false,
+                        onComplete: () => {
+                            mobs3B.x = mobs3.x;
+                            mobs3B.y = mobs3.y - 20;
+                            mobs3B.setVisible(false);
+                        }
+                    })
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

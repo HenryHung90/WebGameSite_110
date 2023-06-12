@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>希望做的完之史萊姆闖關</title>
+    <style type="text/css">
+        body{
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: powderblue;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
+    <script src="scene.js"></script>
+    <script src="player.js"></script>
+    <script src="enemy.js"></script>
+    <script src="menu.js"></script>
+    <script src="Scene1.js"></script>
+    <script src="Scene2.js"></script>
+    <script src="Scene3.js"></script>
+
+
+    
+
+</head>
+<body>
+    <script>
+         const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            backgroundColor: '#DDDDDD',
+            physics: {
+                default: "arcade",
+                arcade: {
+                    gravity: false,
+                    debug: true
+                }
+            },
+            
+            scene:[Menu,Scene,Scene1] 
+        };
+        var game = new Phaser.Game(config);
+    </script>
+    
+</body>
+</html>

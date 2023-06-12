@@ -1,0 +1,197 @@
+#HomeMenu{
+  z-index: 99999;
+  position:fixed;
+  top:0;
+  width:100%;
+  height:auto;
+  opacity: 1;
+}
+
+.GameBar{
+    margin-top:10px;
+    display:flex;
+    justify-content:space-around;
+    width:70%;
+    margin: 0 auto;
+}
+.GameContainer{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left:0;
+    background-color: black;
+    display: none;
+}
+.Gaming{
+    width: 90%;
+    height: 90%;
+    margin-left:5%;
+    -webkit-scrollbar:none;
+}
+.GroupHome{
+    z-index: -100;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    width: 100%;
+    height:100%;
+    background-size: cover;
+}
+#GroupHome_PlayButton{
+    font-family: "pixel font";
+    font-size: 20px;
+    margin-left: 13px;
+    background-color:rgb(97, 161, 1);
+}
+.GroupHome_Main{ 
+    opacity: 1;
+    width: 100%;
+    height: 100%
+}
+.GroupHome_MainText{
+    margin-top:20%;
+    margin-left:8%;
+    color:white;
+}
+.GroupHome_Cover{
+    z-index: -99;
+    position: absolute;
+    opacity: 0.5;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color:black;
+}
+.GroupHome_GroupNumber{
+    font-family: 'pixel font';
+    font-size: 40px;
+}
+.GroupHome_GroupName{
+    font-size: 50px;
+
+}
+.GroupHome_GroupMember{
+    margin-top:-12px;
+    font-size:20px;
+}
+
+.GroupHome_Image{
+    transition-duration: .5s;
+    border: 1px solid white;
+    border-radius:20px 20px 20px 20px;
+    position: absolute;
+    top:13%;
+    left: 55%;
+    width: 420px;
+    height:594px;
+    background-size: cover;
+}
+
+.GroupHome_Image:hover{
+    transition-duration: .5s;
+    width:450px;
+    height:634px;
+    left:54%;
+    top:12%;
+}
+
+.GroupHome_GoIntro{
+    user-select: none;
+    color:white;
+    font-family:'pixel font';
+    font-size:2em;
+    position: absolute;
+    top:90%;
+    left:44%;
+    animation:blink 1s infinite alternate;
+}
+
+
+@keyframes blink {
+    from { opacity:1; }
+    to { opacity:0.5; }
+}
+
+/**********GameContainer*****************************/
+.GroupHome_Container{
+    position: absolute;
+    top:105%;
+    width:100%;
+    height:300%;
+    text-align: center;
+}
+
+.GroupHome_Container_Text{
+    -webkit-text-stroke: 1px white;
+    color:rgb(79, 84, 126);
+    font-family:"pixel font";
+    font-size:5em;
+}
+.GroupHome_GameIntro_Text{
+    padding-top:1px;
+    padding-bottom: 10px;
+    display: flex;
+    background-color:rgba(79,84,126,0.7);
+    margin-top:10px;
+    margin-bottom: 10px;
+    margin-left:10%;
+    width:80%;
+    border-radius:20px 20px 20px 20px;
+}
+.GameIntroTitle{
+    transition-duration: .5s;
+    background-color:white;
+    width:170px;
+    height:150px;
+    margin-top:15px;
+    margin-bottom:10px;
+    margin-left: 3%;
+    line-height:80px;
+    transform: rotate(10deg);
+    border-radius:10px 10px 10px 10px;
+}
+.GameIntroTitle_Text{
+    transform: rotate(-10deg);
+    font-size: 2em;
+}
+#GroupDivision_Text{
+    font-size: 40px;
+}
+.GameIntroSubtitle{
+    color:white;
+    width:90%;
+    font-size:20px;
+    margin-left:30px;
+    margin-right:40px;
+    text-align: left;
+    align-items: center;
+    display: flex;
+}
+#SubImage{
+    display: inline-block;
+}
+.GameIntroSubtitle_Image{
+    width:80%;
+    margin-top: 10px;
+}
+.GameIntroElementTable{
+    background-color: rgba(33, 35, 53, 0.5);
+    text-align: center;
+    margin-top:10px;
+    margin-right:30px;
+    padding: 20px;
+    border: 3px solid whitesmoke;
+    border-radius: 10px;
+    width:100%;
+}
+.GameElement_td{
+    padding: 10px;
+    border: 1px dashed whitesmoke;
+}
+.GroupHome_GroupDivision{
+    padding-bottom: 50px;
+}
+

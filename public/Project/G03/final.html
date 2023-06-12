@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="//cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+  <title>Document</title>
+</head>
+
+<body>
+
+  <script>
+    var config = {
+      type: Phaser.AUTO,
+      width: 800,
+      height: 480,
+      parent: 'game-container',
+      physics: {
+        default: 'arcade',
+        arcade: {
+          gravity: { y: 800 },
+          debug: true
+        }
+      },
+      scene: {
+        preload: preload,
+        create: create,
+        update: update
+      }
+    };
+
+    var game = new Phaser.Game(config);
+    var player;
+    var backgrounds;
+    var backgroundWidth;
+    var floor;
+    var isAttacking = false;
+    var enemy;
+    var enemies;
+    var enemyHealth = 3; // Enemy health counter
+    var enemyHitCount = 0;
+    var maxEnemyHitCount = 3;
+    var enemyHitDuration = 200; // 敵人變紅的持續時間（毫秒）
+    var enemyHitVelocityX = 500; // 敵人被攻擊後的水平彈跳速度
+    var enemyHitVelocityY = -250; // 敵人被攻擊後的垂直彈跳速度
+    var playerHealth=1;
+
+
+    function preload() {
+      this.load.spritesheet('player', 'assets/player.png', { frameWidth: 108, frameHeight: 108 });
+      this.load.image('background', 'assets/sky_4.png');
+      this.load.image('floor', 'assets/floor.png');
+      this.load.image('platform', 'assets/floor.png');
+      this.load.spritesheet('enemy', 'assets/enemy.png', { frameWidth: 32, frameHeight: 48 });
+    }
+    const start_config = {
+      key: 'startsceen',
+      active: false,
+      visible: false,
+      type: Phaser.AUTO,
+      width: 960,
+      height: 540,
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+      },
+      preload: preload,
+      create: function () {
+        backgroundWidth = this.textures.get('background').getSourceImage().width;
+
+        backgrounds = this.add.group({
+          key: 'background',
+          repeat: 1,
+          setXY: { x: 0, y: 0, stepX: backgroundWidth }
+        });
+
+        backgrounds.children.iterate(function (background) {
+          background.setOrigin(0, 0);
+        });
+        backgroundWidth = this.textures.get('background').getSourceImage().width;
+
+        backgrounds = this.add.group({
+          key: 'background',
+          repeat: 1,
+          setXY: { x: 0, y: 0, stepX: backgroundWidth }
+        });
+
+        backgrounds.children.iterate(function (background) {
+          background.setOrigin(0, 0);
+        });
+      }
+
+    }
+
+    function create() {
+      backgroundWidth = this.textures.get('background').getSourceImage().width;
+
+      backgrounds = this.add.group({
+        key: 'background',
+        repeat: 1,
+        setXY: { x: 0, y: 0, stepX: backgroundWidth }
+      });
+
+      backgrounds.children.iterate(function (background) {
+        background.setOrigin(0, 0);
+      });
+      backgroundWidth = this.textures.get('background').getSourceImage().width;
+
+      backgrounds = this.add.group({
+        key: 'background',
+        repeat: 1,
+        setXY: { x: 0, y: 0, stepX: backgroundWidth }
+      });
+
+      backgrounds.children.iterate(function (background) {
+        background.setOrigin(0, 0);
+      });
+
+      platforms = this.physics.add.staticGroup();
+      var platform = platforms.create(400, 400, 'platform'); // Add platform near the player
+      platform.setScale(0.5);
+      platform.refreshBody();
+
+      floor = this.physics.add.staticSprite(config.width / 2, config.height - 10, 'floor');
+      floor.setScale(config.width, 1);
+      floor.refreshBody();
+
+      player = this.physics.add.sprite(400, 300, 'player');
+      player.body.setSize(player.width / 4, player.height / 2 - 10);
+      player.body.setOffset(40, player.height - 50);
+      player.setCollideWorldBounds(true);
+
+      this.cameras.main.setBounds(0, 0, backgroundWidth * 5, config.height);
+
+      this.cameras.main.startFollow(player);
+
+      this.physics.add.collider(player, floor);
+      this.physics.add.collider(player, [floor, platforms]);
+
+      this.anims.create({
+        key: 'left',
+        frames: this.anims.generateFrameNumbers('player', { start: 1, end: 2 }),
+        frameRate: 10,
+        repeat: -1
+      });
+
+      this.anims.create({
+        key: 'right',
+        frames: this.anims.generateFrameNumbers('player', { start: 7, end: 9 }),
+        frameRate: 10,
+        repeat: -1
+      });
+
+      this.anims.create({
+        key: 'idleLeft',
+        frames: [{ key: 'player', frame: 1 }],
+        frameRate: 10
+      });
+
+      this.anims.create({
+        key: 'idleRight',
+        frames: [{ key: 'player', frame: 8 }],
+        frameRate: 10
+      });
+
+      this.anims.create({
+        key: 'jumpLeft',
+        frames: [{ key: 'player', frame: 2 }],
+        frameRate: 10
+      });
+
+      this.anims.create({
+        key: 'jumpRight',
+        frames: [{ key: 'player', frame: 7 }],
+        frameRate: 10
+      });
+
+      this.anims.create({
+        key: 'attackLeft',
+        frames: this.anims.generateFrameNumbers('player', { start: 3, end: 4 }),
+        frameRate: 10
+      });
+
+      this.anims.create({
+        key: 'attackRight',
+        frames: this.anims.generateFrameNumbers('player', { start: 5, end: 6 }),
+        frameRate: 10
+      });
+
+      var cursors = this.input.keyboard.createCursorKeys();
+      var spaceBar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+      spaceBar.on('down', handleAttack, this);
+      spaceBar.on('up', handleAttackComplete, this);
+
+      this.input.keyboard.on('keydown', function (event) {
+        if (!isAttacking) {
+          if (event.code === 'ArrowLeft') {
+            player.setVelocityX(-160);
+            player.anims.play('left', true);
+          } else if (event.code === 'ArrowRight') {
+            player.setVelocityX(160);
+            player.anims.play('right', true);
+          }
+        }
+      });
+
+      this.input.keyboard.on('keyup', function (event) {
+        if (!isAttacking) {
+          if (event.code === 'ArrowLeft' || event.code === 'ArrowRight') {
+            player.setVelocityX(0);
+            if (player.anims.currentAnim && player.anims.currentAnim.key === 'left') {
+              player.anims.play('idleLeft');
+            } else if (player.anims.currentAnim && player.anims.currentAnim.key === 'right') {
+              player.anims.play('idleRight');
+            }
+          }
+        }
+      });
+
+
+      // Create the enemy
+      enemies = this.physics.add.group();
+
+      enemy = enemies.create(600, 300, 'enemy');
+      enemy.setCollideWorldBounds(true);
+      this.physics.add.collider(enemy, floor);
+
+      this.physics.add.collider(player, player, handleEnemyCollision, null, this);
+
+
+
+
+
+
+
+      this.anims.create({
+        key: 'enemyIdle',
+        frames: this.anims.generateFrameNumbers('enemy', { start: 0, end: 2 }),
+        frameRate: 10,
+        repeat: -1
+      });
+
+      enemy.anims.play('enemyIdle', true);
+
+
+      this.anims.create({
+        key: 'enemyHurt',
+        frames: this.anims.generateFrameNumbers('enemy', { start: 2, end: 3 }),
+        frameRate: 10,
+        repeat: 0
+      });
+      this.physics.add.collider(player, enemy, handlePlayerEnemyCollision, null, this);
+
+
+
+    }
+
+    function handlePlayerEnemyCollision(player, enemy) {
+      console.log("碰到了");
+      // 玩家扣血
+      playerHealth -= 1;
+
+      if (playerHealth <= 0) {
+        // 玩家血量小於等於0，結束遊戲
+        endGame();
+      } else {
+        // 更新玩家血量顯示
+        updateHealthDisplay();
+      }
+    }
+    function updateHealthDisplay() {
+      console.log(playerHealth);
+
+    }
+    function endGame() {
+      window.location.href = "end.html";
+    }
+
+    function handleAttack() {
+      if (!isAttacking) {
+        isAttacking = true;
+        if (player.anims.currentAnim.key === 'left') {
+          player.anims.play('attackLeft');
+          player.setVelocityX(-250);
+        } else if (player.anims.currentAnim.key === 'right') {
+          player.anims.play('attackRight');
+          player.setVelocityX(250);
+        }
+
+        // Extend the hitbox of the player's attack
+        var attackHitboxWidth = player.width * 2;
+        var attackHitboxHeight = player.height;
+        var attackHitboxXOffset;
+
+        if (player.anims.currentAnim.key === 'attackLeft') {
+          attackHitboxXOffset = -attackHitboxWidth + player.body.offset.x;
+        } else if (player.anims.currentAnim.key === 'attackRight') {
+          attackHitboxXOffset = player.body.width - player.body.offset.x;
+        }
+
+        var attackHitboxYOffset = player.body.height - player.body.offset.y;
+
+        var attackHitbox = new Phaser.Geom.Rectangle(player.x + attackHitboxXOffset, player.y + attackHitboxYOffset, attackHitboxWidth, attackHitboxHeight);
+
+        // Check if the player's attack hits the enemy
+        // 檢查玩家的攻擊是否擊中敵人
+        if (Phaser.Math.Distance.Between(player.x, player.y, enemy.x, enemy.y) < 50) {
+          enemyHealth--;
+          enemy.anims.play('enemyHurt');
+
+          if (enemyHealth <= 0) {
+            enemy.disableBody(true, true); // 從遊戲中移除敵人
+          } else {
+            // 讓敵人變紅指定的持續時間
+            enemy.setTint(0xff0000);
+            this.time.delayedCall(enemyHitDuration, resetEnemyTint, [], this); // 過了指定時間後，恢復敵人的顏色
+          }
+        }
+      }
+    }
+
+    function resetEnemyTint() {
+      enemy.clearTint(); // 將敵人的顏色恢復為原始狀態
+    }
+
+    function handleAttackComplete() {
+      if (isAttacking) {
+        isAttacking = false;
+        player.setVelocityX(0); // Set the velocity back to 0 to stop the player's movement
+        if (player.anims.currentAnim.key === 'attackLeft') {
+          player.anims.play('idleLeft');
+        } else if (player.anims.currentAnim.key === 'attackRight') {
+          player.anims.play('idleRight');
+        }
+      }
+    }
+
+    function handleEnemyCollision(player, enemy) {
+      if (isAttacking) {
+        // Increase the attack count of the enemy
+        enemy.attackCount = (enemy.attackCount || 0) + 1;
+
+        if (enemy.attackCount >= 3) {
+          // Enemy dies when attacked three times
+          enemy.disableBody(true, true);
+        }
+      }
+    }
+
+
+
+    function update() {
+      var cursors = this.input.keyboard.createCursorKeys();
+
+
+
+      if (player.body.touching.down) {
+        if (!isAttacking) {
+          if (cursors.left.isDown) {
+            player.setVelocityX(-160);
+            player.anims.play('left', true);
+          } else if (cursors.right.isDown) {
+            player.setVelocityX(160);
+            player.anims.play('right', true);
+          } else {
+            player.setVelocityX(0);
+            if (player.anims.currentAnim && player.anims.currentAnim.key === 'left') {
+              player.anims.play('idleLeft');
+            } else if (player.anims.currentAnim && player.anims.currentAnim.key === 'right') {
+              player.anims.play('idleRight');
+            }
+          }
+        }
+
+        if (cursors.up.isDown && player.body.touching.down) {
+          player.setVelocityY(-500);
+        }
+      } else {
+        if (!isAttacking) {
+          if (cursors.left.isDown) {
+            player.setVelocityX(-160);
+            player.anims.play('jumpLeft');
+          } else if (cursors.right.isDown) {
+            player.setVelocityX(160);
+            player.anims.play('jumpRight');
+          } else {
+            player.setVelocityX(0);
+            if (player.anims.currentAnim && player.anims.currentAnim.key === 'jumpLeft') {
+              player.anims.play('idleLeft');
+            } else if (player.anims.currentAnim && player.anims.currentAnim.key === 'jumpRight') {
+              player.anims.play('idleRight');
+            }
+          }
+        }
+      }
+
+      // Check if a new background needs to be generated
+      var cameraScrollX = this.cameras.main.scrollX;
+      var cameraWidth = this.cameras.main.width;
+
+      backgrounds.children.iterate(function (background) {
+        if (background.x + backgroundWidth < cameraScrollX) {
+          background.x += backgroundWidth * 2;
+        } else if (background.x > cameraScrollX + cameraWidth) {
+          background.x -= backgroundWidth * 2;
+        }
+      });
+
+      enemy.body.setSize(enemy.width, enemy.height - 10);
+      enemy.body.setOffset(0, 10);
+
+      // 獲取玩家和敵人之間的水平距離
+      var distanceX = player.x - enemy.x;
+
+      // 根據玩家和敵人的位置關係來決定敵人的移動方向
+      if (distanceX < 0) {
+        enemy.setVelocityX(-50); // 向左移動
+      } else if (distanceX > 0) {
+        enemy.setVelocityX(50); // 向右移動
+      } else {
+        enemy.setVelocityX(0); // 停止移動
+      }
+
+      // 檢查敵人的面朝方向，並根據情況播放相應的動畫
+      if (enemy.body.velocity.x < 0) {
+        enemy.anims.play('enemyLeft', true);
+      } else if (enemy.body.velocity.x > 0) {
+        enemy.anims.play('enemyRight', true);
+      } else {
+        enemy.anims.stop(); // 停止播放動畫
+      }
+
+    }
+  </script>
+</body>
+
+</html>

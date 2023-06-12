@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<style>
+
+  #back{
+    width: 622px;
+    height: 488px;
+    background-image: url(./assets/menu.png);
+  }
+  #click{
+    width: 100px;
+    height: 50px;
+    font-size: 32px;
+    margin-left: 41%;
+    margin-top: 65%;
+    color: white;
+    background-color: black;
+  }
+</style>
+
+<body>
+  <div id="back">
+    <button id="click" onclick="startGame()">start</button>
+  </div>
+    
+    <script src="./phaser.min.js"> </script>
+    <script>
+        function startGame() {
+          window.location.href = "secondindex.html";
+        }
+      </script>
+</body>
+</html>

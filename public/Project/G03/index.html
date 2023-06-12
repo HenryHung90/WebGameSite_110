@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="//cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+  <title>Document</title>
+</head>
+
+<body>
+
+  <script>
+    var config = {
+      type: Phaser.AUTO,
+      width: 800,
+      height: 480,
+      parent: 'game-container',
+      physics: {
+        default: 'arcade',
+        arcade: {
+          gravity: { y: 800 },
+        }
+      },
+      scene: {
+        preload: preload,
+        create: create,
+        update: update
+      }
+    };
+
+    var game = new Phaser.Game(config);
+    var player;
+    var backgrounds;
+    var backgroundWidth;
+    var floor;
+    var isAttacking = false;
+    var enemy;
+    var enemies;
+    var enemyHealth = 20; // Enemy health counter
+    var enemyHitCount = 0;
+    var maxEnemyHitCount = 3;
+    var enemyHitDuration = 2000; // 敵人變紅的持續時間（毫秒）
+    var enemyHitVelocityX = 500; // 敵人被攻擊後的水平彈跳速度
+    var enemyHitVelocityY = -250; // 敵人被攻擊後的垂直彈跳速度
+    var hearts;
+    var startScreen;
+    var startbtn
+    var playerHealth = 5;
+
+    let healthText;
+
+    function preload() {
+      this.load.audio('backgroundMusic', 'assets/background_music.mp3');
+      this.load.spritesheet('player', 'assets/player.png', { frameWidth: 108, frameHeight: 108 });
+      this.load.image('background', 'assets/M3.png');
+      this.load.image('heart', 'assets/heart.png');
+      this.load.image('floor', 'assets/gse.png');
+      this.load.image('platform', 'assets/gse.png');
+      this.load.spritesheet('enemy', 'assets/sword (2).png', { frameWidth: 340, frameHeight: 340 });
+    }
+
+    function create() {
+      var backgroundMusic = this.sound.add('backgroundMusic', { loop: true });
+      backgroundMusic.play();
+      backgroundWidth = this.textures.get('background').getSourceImage().width;
+
+      backgrounds = this.add.group({
+        key: 'background',
+        repeat: 1,
+        setXY: { x: 0, y: 0, stepX: backgroundWidth }
+      });
+
+      backgrounds.children.iterate(function (background) {
+        background.setOrigin(0, 0);
+      });
+      backgroundWidth = this.textures.get('background').getSourceImage().width;
+
+
+      backgrounds = this.add.group({
+        key: 'background',
+        repeat: 1,
+        setXY: { x: 0, y: 0, stepX: backgroundWidth }
+      });
+
+      backgrounds.children.iterate(function (background) {
+        background.setOrigin(0, 0);
+      });
+
+      platforms = this.physics.add.staticGroup();
+      var platform = platforms.create(400, 400, 'platform'); // Add platform near the player
+      platform.setScale(0.5);
+      platform.refreshBody();
+
+      var platformPositions = []; // 存储平台的位置
+
+      for (var i = 0; i < 200; i++) {
+        var x = Math.random() * 3400; // 随机 x 坐标
+        var y = Math.random() *400; // 随机 y 坐标
+
+        // 检查当前平台的位置是否与之前的平台位置过近
+        var isOverlap = false;
+        for (var j = 0; j < platformPositions.length; j++) {
+          if (Phaser.Math.Distance.Between(x, y, platformPositions[j].x, platformPositions[j].y) < 200) {
+            isOverlap = true;
+            break;
+          }
+        }
+
+        if (!isOverlap) {
+          platforms.create(x, y, 'platform'); // 创建平台
+          platformPositions.push({ x: x, y: y }); // 存储平台位置
+        }
+      }
+
+      floor = this.physics.add.staticSprite(config.width / 2, config.height - 10, 'floor');
+      floor.setScale(config.width, 1);
+      floor.refreshBody();
+
+      player = this.physics.add.sprite(400, 300, 'player');
+      player.health = 5;
+      player.body.setSize(player.width / 4, player.height / 2 - 10);
+      player.body.setOffset(40, player.height - 50);
+      player.setCollideWorldBounds(false);
+
+      this.cameras.main.setBounds(0, 0, backgroundWidth * 5, config.height);
+
+      this.cameras.main.startFollow(player);
+
+      this.physics.add.collider(player, floor);
+      this.physics.add.collider(player, [floor, platforms]);
+
+      this.anims.create({
+        key: 'left',
+        frames: this.anims.generateFrameNumbers('player', { start: 1, end: 2 }),
+        frameRate: 10,
+        repeat: -1
+      });
+
+      this.anims.create({
+        key: 'right',
+        frames: this.anims.generateFrameNumbers('player', { start: 7, end: 9 }),
+        frameRate: 10,
+        repeat: -1
+      });
+
+      this.anims.create({
+        key: 'idleLeft',
+        frames: [{ key: 'player', frame: 1 }],
+        frameRate: 10
+      });
+
+      this.anims.create({
+        key: 'idleRight',
+        frames: [{ key: 'player', frame: 8 }],
+        frameRate: 10
+      });
+
+      this.anims.create({
+        key: 'jumpLeft',
+        frames: [{ key: 'player', frame: 2 }],
+        frameRate: 10
+      });
+
+      this.anims.create({
+        key: 'jumpRight',
+        frames: [{ key: 'player', frame: 7 }],
+        frameRate: 10
+      });
+
+      this.anims.create({
+        key: 'attackLeft',
+        frames: this.anims.generateFrameNumbers('player', { start: 3, end: 4 }),
+        frameRate: 60
+      });
+
+      this.anims.create({
+        key: 'attackRight',
+        frames: this.anims.generateFrameNumbers('player', { start: 5, end: 6 }),
+        frameRate: 60
+      });
+
+      var cursors = this.input.keyboard.createCursorKeys();
+      var spaceBar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+      spaceBar.on('down', handleAttack, this);
+      spaceBar.on('up', handleAttackComplete, this);
+
+      this.input.keyboard.on('keydown', function (event) {
+        if (!isAttacking) {
+          if (event.code === 'ArrowLeft') {
+            player.setVelocityX(-160);
+            player.anims.play('left', true);
+          } else if (event.code === 'ArrowRight') {
+            player.setVelocityX(160);
+            player.anims.play('right', true);
+          }
+        }
+      });
+
+      this.input.keyboard.on('keyup', function (event) {
+        if (!isAttacking) {
+          if (event.code === 'ArrowLeft' || event.code === 'ArrowRight') {
+            player.setVelocityX(0);
+            if (player.anims.currentAnim && player.anims.currentAnim.key === 'left') {
+              player.anims.play('idleLeft');
+            } else if (player.anims.currentAnim && player.anims.currentAnim.key === 'right') {
+              player.anims.play('idleRight');
+            }
+          }
+        }
+      });
+
+      // Create the enemy
+      enemies = this.physics.add.group();
+
+
+      enemies.children.iterate(function (enemy) {
+        enemy.anims.play('enemyAnimation');
+      });
+
+      enemy = enemies.create(600, 300, 'enemy').setScale(0.2);
+      enemy.setCollideWorldBounds(false);
+      this.physics.add.collider(enemy, floor);
+      this.physics.add.collider(player, enemy, handlePlayerEnemyCollision, null, this);
+      this.physics.add.collider(player, enemies, handlePlayerEnemyCollision, null, this);
+
+
+
+
+
+
+
+
+
+
+      // 監聽敵人與玩家的碰撞
+      // this.physics.add.collider(enemy, platforms);
+
+      // 在 create() 函數中，創建愛心圖示的群組
+      // hearts = this.add.group();
+
+      // 在左上角創建愛心圖示
+      // var heartX = 20;
+      // var heartY = 15;
+      // var heartSpacing = 30;
+
+      // 在 create() 函數中，修改愛心圖示的大小
+      // for (var i = 0; i < player.health; i++) {
+      //   var heart = this.add.image(heartX + i * heartSpacing, heartY, 'heart');
+      //   heart.setScale(0.1); // 將愛心圖示縮小到原來的一半大小
+      //   hearts.add(heart);
+      // }
+
+    }
+
+    function handlePlayerEnemyCollision(player, enemy) {
+      console.log("碰到了");
+      // 玩家扣血
+      playerHealth -= 1;
+
+      if (playerHealth <= 0) {
+        // 玩家血量小於等於0，結束遊戲
+        endGame();
+      } else {
+        // 更新玩家血量顯示
+        updateHealthDisplay();
+      }
+    }
+    function updateHealthDisplay() {
+      console.log(playerHealth);
+
+    }
+    function endGame() {
+      window.location.href = "end.html";
+    }
+
+    function win(){
+      window.location.href = "win.html";
+    }
+
+    function handleAttack() {
+
+      if (!isAttacking) {
+        isAttacking = true;
+        if (player.anims.currentAnim.key === 'left') {
+          player.anims.play('attackLeft');
+          player.setVelocityX(-250);
+        } else if (player.anims.currentAnim.key === 'right') {
+          player.anims.play('attackRight');
+          player.setVelocityX(250);
+        }
+
+        // Extend the hitbox of the player's attack
+        var attackHitboxWidth = player.width * 30;
+        var attackHitboxHeight = player.height;
+        var attackHitboxXOffset;
+
+        if (player.anims.currentAnim.key === 'attackLeft') {
+          attackHitboxXOffset = -attackHitboxWidth + player.body.offset.x;
+        } else if (player.anims.currentAnim.key === 'attackRight') {
+          attackHitboxXOffset = player.body.width - player.body.offset.x;
+        }
+
+        var attackHitboxYOffset = player.body.height - player.body.offset.y;
+
+        var attackHitbox = new Phaser.Geom.Rectangle(player.x + attackHitboxXOffset, player.y + attackHitboxYOffset, attackHitboxWidth, attackHitboxHeight);
+
+        // Check if the player's attack hits the enemy
+        // 檢查玩家的攻擊是否擊中敵人
+        if (Phaser.Math.Distance.Between(player.x, player.y, enemy.x, enemy.y) < 100) {
+          enemyHealth--;
+
+          if (enemyHealth <= 0) {
+            enemy.disableBody(true, true); // 從遊戲中移除敵人
+            win();
+          } else {
+            console.log(enemyHealth);
+            // 讓敵人變紅指定的持續時間
+            enemy.setTint(0xff0000);
+            this.time.delayedCall(enemyHitDuration, resetEnemyTint, [], this); // 過了指定時間後，恢復敵人的顏色
+          }
+        }
+      }
+    }
+
+    function resetEnemyTint() {
+      enemy.clearTint(); // 將敵人的顏色恢復為原始狀態
+    }
+
+    function handleAttackComplete() {
+      if (isAttacking) {
+        isAttacking = false;
+        player.setVelocityX(0); // Set the velocity back to 0 to stop the player's movement
+
+
+      }
+    }
+
+    function handleEnemyCollision(player, enemy) {
+      if (isAttacking) {
+        // Increase the attack count of the enemy
+        enemy.attackCount = (enemy.attackCount || 0) + 1;
+
+        if (enemy.attackCount >= 3) {
+          // Enemy dies when attacked three times
+          enemy.disableBody(true, true);
+        }
+      }
+    }
+
+
+
+    function update() {
+
+      
+
+      var cursors = this.input.keyboard.createCursorKeys();
+
+
+
+      if (player.body.touching.down) {
+        if (!isAttacking) {
+          if (cursors.left.isDown) {
+            player.setVelocityX(-160);
+            player.anims.play('left', true);
+          } else if (cursors.right.isDown) {
+            player.setVelocityX(160);
+            player.anims.play('right', true);
+          } else {
+            player.setVelocityX(0);
+            if (player.anims.currentAnim && player.anims.currentAnim.key === 'left') {
+              player.anims.play('idleLeft');
+            } else if (player.anims.currentAnim && player.anims.currentAnim.key === 'right') {
+              player.anims.play('idleRight');
+            }
+          }
+        }
+
+        if (cursors.up.isDown && player.body.touching.down) {
+          player.setVelocityY(-500);
+        }
+      } else {
+        if (!isAttacking) {
+          if (cursors.left.isDown) {
+            player.setVelocityX(-160);
+            player.anims.play('jumpLeft');
+          } else if (cursors.right.isDown) {
+            player.setVelocityX(160);
+            player.anims.play('jumpRight');
+          } else {
+            player.setVelocityX(0);
+            if (player.anims.currentAnim && player.anims.currentAnim.key === 'jumpLeft') {
+              player.anims.play('idleLeft');
+            } else if (player.anims.currentAnim && player.anims.currentAnim.key === 'jumpRight') {
+              player.anims.play('idleRight');
+            }
+          }
+        }
+      }
+
+      // Check if a new background needs to be generated
+      var cameraScrollX = this.cameras.main.scrollX;
+      var cameraWidth = this.cameras.main.width;
+
+      backgrounds.children.iterate(function (background) {
+        if (background.x + backgroundWidth < cameraScrollX) {
+          background.x += backgroundWidth * 2;
+        } else if (background.x > cameraScrollX + cameraWidth) {
+          background.x -= backgroundWidth * 2;
+        }
+      });
+
+      enemy.body.setSize(enemy.width, enemy.height - 10);
+      enemy.body.setOffset(0, 10);
+
+      var distanceX = player.x - enemy.x;
+      enemies.getChildren().forEach(function (enemy) {
+        var distance = Phaser.Math.Distance.Between(player.x, player.y, enemy.x, enemy.y);
+        //console.log(distance);
+
+
+        // 如果距离小于某个值，执行相应操作
+        if (distance <= 300) {
+          // 当距离小于100时，执行一些动作，比如攻击玩家
+          console.log('Attack player!');
+          enemies.setVelocityX(-70);
+        } // 向左移動
+        else if (distance < 0) {
+          enemies.setVelocityX(70); // 向右移動
+        } else {
+          enemies.setVelocityX(0); // 停止移動
+          enemy.anims.play('enemyIdle', true);
+
+        }
+      });
+
+
+      if (Math.abs(distanceX) <= 300) {
+        // 玩家在敵人的範圍內，追蹤玩家
+        if (distanceX < 0) {
+          enemy.setVelocityX(-90); // 向左移動
+        } else if (distanceX > 0) {
+          enemy.setVelocityX(90); // 向右移動
+        } else {
+          enemy.setVelocityX(0); // 停止移動
+        }
+      } else {
+        // 玩家不在敵人的範圍內，停止移動
+        enemy.setVelocityX(0);
+        enemy.anims.play('enemyIdle', true);
+      }
+
+      // 檢查敵人的面朝方向，並根據情況播放相應的動畫
+      if (enemy.body.velocity.x < 0) {
+        enemy.anims.play('enemyLeft', true);
+      } else if (enemy.body.velocity.x > 0) {
+        enemy.anims.play('enemyRight', true);
+      } else {
+        enemy.anims.stop(); // 停止播放動畫
+      }
+
+
+      // 監視玩家的血量
+      // for (var i = 0; i < hearts.getChildren().length; i++) {
+      //   var heart = hearts.getChildren()[i];
+
+      //   // 根據玩家的血量顯示或隱藏愛心圖示
+      //   if (i < player.health) {
+      //     heart.visible = true;
+      //   } else {
+      //     heart.visible = false;
+      //   }
+      // }
+
+
+    }
+  </script>
+</body>
+
+</html>

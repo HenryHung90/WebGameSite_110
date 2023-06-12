@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+
+  <style>
+    * {
+
+      margin: 0;
+      padding: 0;
+
+    }
+
+    @font-face {
+      font-family: 'MyFont';
+      src: url('./assets/Minecraft.ttf') format('truetype');
+    }
+
+    #game-container {
+      width: 800px;
+    
+      height: 600px;
+      
+      margin: 0 auto;
+     
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+
+    }
+
+    #start-btn,
+    #quit-btn,
+    #rule-btn {
+
+      width: 200px;
+      height: 50px;
+      margin-top: 25px;
+      padding: 10px;
+      float: right;
+      text-align: center;
+      background-color: green;
+      color: white;
+      cursor: pointer;
+      border: 1px solid black;
+      font-size: 22px;
+      border-radius: 5px;
+    }
+
+    #rule-btn:hover {
+      scale: 1.2
+    }
+
+    #start-btn:hover {
+      scale: 1.2;
+    }
+
+    #quit-btn:hover {
+      scale: 1.2;
+    }
+
+    #start-page {
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-end;
+      width: 1050px;
+      height: 650px;
+      border: solid 1px;
+      background-image: url(assets/ui.jpg);
+      background-size: cover;
+      background-repeat: no-repeat;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      /* border: 1px solid red; */
+    }
+
+    .btnContainer {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 30%;
+      height: 35%;
+      margin-right: 40px;
+      margin-bottom: 50px;
+      /* border: 1px solid black; */
+
+    }
+
+  #rule {
+      margin-left: 50px;
+      margin-bottom: 50px;
+      border: 2px solid black;
+      display: none;
+    }
+  </style>
+
+
+</head>
+
+<body>
+   <div id="start-page">
+    <img id="rule" src="./assets/rule.png" alt="">
+    <div class="btnContainer">
+      <button id="rule-btn">遊戲規則</button>
+      <button id="start-btn">開始遊戲</button>
+      <button id="quit-btn">退出遊戲</button>
+
+    </div>
+  </div>
+  <div id="game-container" style="display: none;">
+  </div>
+  <script>
+     let startqq = false;
+    const rule = document.getElementById("rule");
+    const startPage = document.getElementById("start-page");
+    const gameContainer = document.getElementById("game-container");
+    const startButton = document.getElementById("start-btn");
+    const quitButton = document.getElementById("quit-btn");
+    let sum = 0;
+
+    document.getElementById('rule-btn').addEventListener('click', function () {
+      sum += 1;
+
+      if (sum % 2 == 1) {
+        rule.style.display = "block";
+      }
+      if (sum % 2 == 0) {
+        rule.style.display = "none";
+      }
+    });
+
+
+    startButton.addEventListener("click", () => {
+      startPage.style.display = "none";
+      gameContainer.style.display = "block";
+      game.canvas.focus();
+      startqq = true;
+    });
+
+    quitButton.addEventListener("click", () => {
+      window.close();
+    });
+
+    const config = {
+      type: Phaser.AUTO,
+      width: 800,
+      height: 600,
+      parent: 'game-container',
+      physics: {
+        default: 'arcade',
+        arcade: {
+          gravity: { y: 0 },
+          debug: false
+        }
+      },
+      scene: {
+        preload: preload,
+        create: create,
+        update: update
+      }
+    };
+
+    const game = new Phaser.Game(config);
+
+    let platforms, player, cursors;
+    let score = 0;
+    let scoreText;
+    let gameOver = false;
+
+    let enemy;
+    let enemy2;
+    let boss;
+    let bosshp = 2000;
+    var hitBomb3Enabled = true;
+    let velocityX = 0
+    let velocityY = 0
+    let isMusic=false;
+
+    let bullet;
+    let lives = 10;
+    let Newenemy;
+    let Newenemy2;
+    let win;
+    let bossbullet;
+
+    let gameOverText;
+    let playAgainText;
+    var bossTween = null;
+
+    let lastShotTime = 0;
+    let bulletDelay = 400;
+
+    let heart1, heart2, heart3, heart4, heart5, heart6, heart7, heart8, heart9, heart10, heart11, heart12, heart13, heart14, heart15, heart16, heart17, heart18, heart19, heart20;
+
+    function preload() {
+      this.load.image('bg', 'assets/bg.png');
+      this.load.image('001', 'assets/001.png');
+      //this.load.image('enemy', 'assets/enemy.png');
+      this.load.image('heart1', 'assets/full_heart.png')
+      this.load.image('heart0', 'assets/heart_blank.png')
+      this.load.image('bullet', 'assets/bullet.png');
+      this.load.image('enemybullet', 'assets/enemybullet.png')
+      this.load.image('gameOver', 'assets/game_over.png');
+      this.load.image('playAgain', 'assets/play_again.png');
+      this.load.image('scorePic', 'assets/score.png');
+      this.load.image('winText','assets/winPic.png');
+      this.load.image('bossbullet','assets/bossbullet.png');
+      this.load.audio('shoot', './assets/audio/shoot.mp3');
+      this.load.audio('explode', './assets/audio/explode.mp3');
+      this.load.audio('bgMusic', './assets/audio/bgMusic.mp3');
+      this.load.audio('bossmusic', './assets/audio/bossmusic.mp3');
+      this.load.audio('victory', './assets/audio/victory.mp3');
+      this.load.spritesheet('dude', 'assets/123.png', {
+        frameWidth: 63.6,
+        frameHeight: 47
+      });
+      this.load.spritesheet('enemy', 'assets/enemy1.png', {
+        frameWidth: 62.33,
+        frameHeight: 40
+      })
+      //678
+      this.load.spritesheet('enemy2', 'assets/enemy2.png', {
+        frameWidth: 62.33,
+        frameHeight: 40
+      })
+
+      this.load.spritesheet('boss', 'assets/boss.png', {
+        frameWidth: 95,
+        frameHeight: 85
+      })
+
+    }
+    function bulletHitEnemy(bullet, enemy) {
+      bullet.disableBody(true, true);
+      enemy.hp -= 20;
+
+      if (enemy.hp <= 0) {
+        explode.play();
+        enemy.destroy();
+        score += 10;
+        scoreText.setText(score);
+      }
+    }
+    function bulletHitEnemy2(bullet, enemy2) {
+      bullet.disableBody(true, true);
+      enemy2.hp -= 20;
+
+      if (enemy2.hp <= 0) {
+        explode.play();
+        enemy2.destroy();
+        score += 10;
+        scoreText.setText(score);
+      }
+    }
+
+    function bulletHitNewEnemy(bullet, Newenemy) {
+      bullet.disableBody(true, true);
+      Newenemy.hp -= 20;
+
+      if (Newenemy.hp <= 0) {
+        explode.play();
+        Newenemy.destroy();
+
+        score += 10;
+        scoreText.setText(score);
+      }
+    }
+
+    function bulletHitNewEnemy2(bullet, Newenemy2) {
+      bullet.disableBody(true, true);
+      Newenemy2.hp -= 20;
+
+      if (Newenemy2.hp <= 0) {
+        explode.play();
+        Newenemy2.destroy();
+
+        score += 10;
+        scoreText.setText(score);
+      }
+    }
+
+    function bulletHitBoss(bullet, boss) {
+      bullet.disableBody(true, true);
+      bosshp -= 20;
+      if (bosshp <= 0) {
+        explode.play();
+        boss.destroy();
+        bossmusic.stop();
+        victory.play();
+        win = true;
+        score += 300;
+        scoreText.setText(score);
+      }
+    }
+    function bossAttack() {
+      if (gameOver || this.cameras.main.scrollX < 3000||win==true) {
+        return;
+       
+      }
+
+      const bulletSpeed = -200; 
+      const bulletAngleIncrement = 22.5; 
+      const bulletCount = 8;
+
+      const bossCenterX = boss.x; 
+      const bossCenterY = boss.y;
+
+      for (let i = 0; i < bulletCount; i++) {
+        const bossbullet = this.physics.add.sprite(bossCenterX, bossCenterY+30, 'bossbullet');
+        bossbullet.setScale(0.5, 0.5);
+
+        shoot.play();
+
+        const bulletAngle = Phaser.Math.DegToRad(i * bulletAngleIncrement);
+        const bulletVelocityX = bulletSpeed * Math.cos(bulletAngle);
+        const bulletVelocityY = bulletSpeed * Math.sin(bulletAngle); 
+        bossbullet.setVelocity(bulletVelocityX, bulletVelocityY);
+
+        console.log('BOSS子彈');
+
+        this.physics.add.collider(player, bossbullet, hitBomb, null, this);
+      }
+
+    }
+
+    function createEnemy() {
+      if (gameOver || this.cameras.main.scrollX > 2800) {
+        return;
+      }
+
+      const screenHeight = config.height;
+      const randomY = Phaser.Math.Between(150, screenHeight - 150);
+      Newenemy = this.physics.add.sprite(config.width + this.cameras.main.scrollX, randomY, 'enemy');
+      Newenemy.setVelocityX(-200);
+      Newenemy.hp = 20;
+
+      Newenemy.anims.play('enemyAnimation', true);
+
+      this.physics.add.collider(Newenemy, platforms);
+      this.physics.add.collider(player, Newenemy, hitBomb, null, this);
+      this.physics.add.collider(bullet, Newenemy, bulletHitNewEnemy, null, this);
+
+      x(this, 0);
+
+      enemy.add(Newenemy);
+      x(this, 0);
+
+    }
+
+    function x(context, count) {
+      const maxBulletCount = (count < 3) ? 4 : 3; 
+
+      if (count < maxBulletCount) {
+        const enemybullet = context.physics.add.sprite(Newenemy.x + 10, Newenemy.y, 'enemybullet');
+        enemybullet.setScale(-1, 1);
+
+        const speed = 300;
+
+        const angleToPlayer = Phaser.Math.Angle.Between(enemybullet.x, enemybullet.y, player.x, player.y);
+
+        const velocity = context.physics.velocityFromRotation(angleToPlayer, speed);
+
+        enemybullet.setVelocity(velocity.x, velocity.y);
+
+        shoot.play();
+
+        context.physics.add.collider(player, enemybullet, hitBomb, null, context);
+
+    
+        count++;
+
+   
+        setTimeout(function () {
+          x(context, count);
+        }, 1500);
+      }
+    }
+
+
+    function createEnemy2() {
+      if (gameOver || this.cameras.main.scrollX > 2800) {
+        return;
+      }
+      const screenHeight = config.height;
+      const randomY = Phaser.Math.Between(150, screenHeight - 150);
+      Newenemy2 = this.physics.add.sprite(config.width + this.cameras.main.scrollX, randomY, 'enemy2');
+
+      Newenemy2.setVelocityX(-300);
+
+      Newenemy2.anims.play('enemy2Animation', true);
+
+      this.physics.add.collider(Newenemy2, platforms);
+      this.physics.add.collider(player, Newenemy2, hitBomb2, null, this);
+      this.physics.add.collider(bullet, Newenemy2, bulletHitNewEnemy2, null, this);
+
+      enemy.add(Newenemy2);
+
+
+      Newenemy2.hp = 40;
+    }
+
+
+    function hitBomb(player, enemy) {
+      explode.play();
+      player.setTint(0xff0000);
+      player.anims.play('turn');
+      setTimeout(function () {
+        player.clearTint();
+      }, 100);
+
+      lives -= 1;
+      enemy.destroy();
+      if (lives === 10) {
+        heart1.visible = true;
+        heart2.visible = true;
+        heart3.visible = true;
+        heart4.visible = true;
+        heart5.visible = true;
+        heart6.visible = true;
+        heart7.visible = true;
+        heart8.visible = true;
+        heart9.visible = true;
+        heart10.visible = true;
+        heart11.visible = false;
+        heart12.visible = false;
+        heart13.visible = false;
+        heart14.visible = false;
+        heart15.visible = false;
+        heart16.visible = false;
+        heart17.visible = false;
+        heart18.visible = false;
+        heart19.visible = false;
+        heart20.visible = false;
+      }
+      if (lives === 9) {
+        heart10.visible = false;
+        heart20.visible = true;
+      }
+      if (lives === 8) {
+        heart9.visible = false;
+        heart19.visible = true;
+      }
+      if (lives === 7) {
+        heart8.visible = false;
+        heart18.visible = true;
+      }
+      if (lives === 6) {
+        heart7.visible = false;
+        heart17.visible = true;
+      }
+      if (lives === 5) {
+        heart6.visible = false;
+        heart16.visible = true;
+      }
+      if (lives === 4) {
+        heart5.visible = false;
+        heart15.visible = true;
+      }
+      if (lives === 3) {
+        heart4.visible = false;
+        heart14.visible = true;
+      }
+      if (lives === 2) {
+        heart3.visible = false;
+        heart13.visible = true;
+      }
+      if (lives === 1) {
+        heart2.visible = false;
+        heart12.visible = true;
+      }
+      if (lives <= 0) {
+        heart1.visible = false;
+        heart11.visible = true;
+        gameOver = true;
+        player.setVelocity(0);
+        enemy.destroy();
+        gameOverText.visible = true;
+        playAgainText.visible = true;
+        bgMusic.stop();
+      }
+    }
+
+    function hitBomb2(player, enemy2) {
+      explode.play();
+      player.setTint(0xff0000);
+      player.anims.play('turn');
+      setTimeout(function () {
+        player.clearTint();
+      }, 100);
+
+      lives -= 1;
+      enemy2.destroy();
+      if (lives === 10) {
+        heart1.visible = true;
+        heart2.visible = true;
+        heart3.visible = true;
+        heart4.visible = true;
+        heart5.visible = true;
+        heart6.visible = true;
+        heart7.visible = true;
+        heart8.visible = true;
+        heart9.visible = true;
+        heart10.visible = true;
+        heart11.visible = false;
+        heart12.visible = false;
+        heart13.visible = false;
+        heart14.visible = false;
+        heart15.visible = false;
+        heart16.visible = false;
+        heart17.visible = false;
+        heart18.visible = false;
+        heart19.visible = false;
+        heart20.visible = false;
+      }
+      if (lives === 9) {
+        heart10.visible = false;
+        heart20.visible = true;
+      }
+      if (lives === 8) {
+        heart9.visible = false;
+        heart19.visible = true;
+      }
+      if (lives === 7) {
+        heart8.visible = false;
+        heart18.visible = true;
+      }
+      if (lives === 6) {
+        heart7.visible = false;
+        heart17.visible = true;
+      }
+      if (lives === 5) {
+        heart6.visible = false;
+        heart16.visible = true;
+      }
+      if (lives === 4) {
+        heart5.visible = false;
+        heart15.visible = true;
+      }
+      if (lives === 3) {
+        heart4.visible = false;
+        heart14.visible = true;
+      }
+      if (lives === 2) {
+        heart3.visible = false;
+        heart13.visible = true;
+      }
+      if (lives === 1) {
+        heart2.visible = false;
+        heart12.visible = true;
+      }
+      if (lives <= 0) {
+        heart1.visible = false;
+        heart11.visible = true;
+        gameOver = true;
+        player.setVelocity(0);
+        enemy2.destroy();
+        gameOverText.visible = true;
+        playAgainText.visible = true;
+       
+        bgMusic.stop();
+      }
+    }
+
+    function hitBomb3(player, boss) {
+      if (!hitBomb3Enabled) {
+        return;
+      }
+      explode.play();
+      player.setTint(0xff0000);
+      player.anims.play('turn');
+      setTimeout(function () {
+        player.clearTint();
+      }, 100);
+
+      lives -= 1;
+
+      if (lives === 10) {
+        heart1.visible = true;
+        heart2.visible = true;
+        heart3.visible = true;
+        heart4.visible = true;
+        heart5.visible = true;
+        heart6.visible = true;
+        heart7.visible = true;
+        heart8.visible = true;
+        heart9.visible = true;
+        heart10.visible = true;
+        heart11.visible = false;
+        heart12.visible = false;
+        heart13.visible = false;
+        heart14.visible = false;
+        heart15.visible = false;
+        heart16.visible = false;
+        heart17.visible = false;
+        heart18.visible = false;
+        heart19.visible = false;
+        heart20.visible = false;
+      }
+      if (lives === 9) {
+        heart10.visible = false;
+        heart20.visible = true;
+      }
+      if (lives === 8) {
+        heart9.visible = false;
+        heart19.visible = true;
+      }
+      if (lives === 7) {
+        heart8.visible = false;
+        heart18.visible = true;
+      }
+      if (lives === 6) {
+        heart7.visible = false;
+        heart17.visible = true;
+      }
+      if (lives === 5) {
+        heart6.visible = false;
+        heart16.visible = true;
+      }
+      if (lives === 4) {
+        heart5.visible = false;
+        heart15.visible = true;
+      }
+      if (lives === 3) {
+        heart4.visible = false;
+        heart14.visible = true;
+      }
+      if (lives === 2) {
+        heart3.visible = false;
+        heart13.visible = true;
+      }
+      if (lives === 1) {
+        heart2.visible = false;
+        heart12.visible = true;
+      }
+      if (lives <= 0) {
+        heart1.visible = false;
+        heart11.visible = true;
+        gameOver = true;
+        player.setVelocity(0);
+
+        gameOverText.visible = true;
+        playAgainText.visible = true;
+       
+        bgMusic.stop();
+      }
+      hitBomb3Enabled = false; 
+      setTimeout(function () {
+        hitBomb3Enabled = true;
+      }, 2000);
+    }
+
+    function restartgame() {
+      gameOver = false;
+      score = 0;
+      lives = 10;
+      scoreText.setText(score);
+      bgMusic.play();
+      heart1.visible = true;
+      heart2.visible = true;
+      heart3.visible = true;
+      heart4.visible = true;
+      heart5.visible = true;
+      heart6.visible = true;
+      heart7.visible = true;
+      heart8.visible = true;
+      heart9.visible = true;
+      heart10.visible = true;
+      heart11.visible = false;
+      heart12.visible = false;
+      heart13.visible = false;
+      heart14.visible = false;
+      heart15.visible = false;
+      heart16.visible = false;
+      heart17.visible = false;
+      heart18.visible = false;
+      heart19.visible = false;
+      heart20.visible = false;
+      player.setPosition(100, 300);
+      win=false;
+    }
+
+
+
+
+
+
+
+    //---------------------------------------------------
+
+    function create() {
+
+
+
+      shoot = this.sound.add('shoot');
+      bgMusic = this.sound.add('bgMusic');
+      explode = this.sound.add('explode');
+      bossmusic=this.sound.add('bossmusic');
+      victory=this.sound.add('victory');
+      bgMusic.play();
+      this.physics.world.setBounds(10, 0, 800, 600);
+
+      bg = this.add.image(0, 0, 'bg').setOrigin(0);
+      this.add.image(4000, 300, 'bg');
+
+
+      let lastBulletTime = 0;
+      const bulletDelay = 200;
+
+      platforms = this.physics.add.staticGroup();
+
+
+      heart1 = this.add.image(30, 90, 'heart1').setScrollFactor(0);
+      heart2 = this.add.image(70, 90, 'heart1').setScrollFactor(0);
+      heart3 = this.add.image(110, 90, 'heart1').setScrollFactor(0);
+      heart4 = this.add.image(150, 90, 'heart1').setScrollFactor(0);
+      heart5 = this.add.image(190, 90, 'heart1').setScrollFactor(0);
+      heart6 = this.add.image(30, 130, 'heart1').setScrollFactor(0);
+      heart7 = this.add.image(70, 130, 'heart1').setScrollFactor(0);
+      heart8 = this.add.image(110, 130, 'heart1').setScrollFactor(0);
+      heart9 = this.add.image(150, 130, 'heart1').setScrollFactor(0);
+      heart10 = this.add.image(190, 130, 'heart1').setScrollFactor(0);
+      heart11 = this.add.image(30, 90, 'heart0').setScrollFactor(0);
+      heart12 = this.add.image(70, 90, 'heart0').setScrollFactor(0);
+      heart13 = this.add.image(110, 90, 'heart0').setScrollFactor(0);
+      heart14 = this.add.image(150, 90, 'heart0').setScrollFactor(0);
+      heart15 = this.add.image(190, 90, 'heart0').setScrollFactor(0);
+      heart16 = this.add.image(30, 130, 'heart0').setScrollFactor(0);
+      heart17 = this.add.image(70, 130, 'heart0').setScrollFactor(0);
+      heart18 = this.add.image(110, 130, 'heart0').setScrollFactor(0);
+      heart19 = this.add.image(150, 130, 'heart0').setScrollFactor(0);
+      heart20 = this.add.image(190, 130, 'heart0').setScrollFactor(0);
+
+      scoreText = this.add.text(140, 19, '0', { fontFamily: 'MyFont', fontSize: '36px', color: 'white' }).setScrollFactor(0);
+      scorePic = this.add.image(70, 40, 'scorePic').setScrollFactor(0);
+
+	    winText=this.add.image(400, 250, 'winText').setScrollFactor(0).setScale(0.5);
+      gameOverText = this.add.image(400, 250, 'gameOver').setScrollFactor(0);
+      playAgainText = this.add.image(400, 430, 'playAgain').setScrollFactor(0);
+     
+      win = false;
+      gameOverText.visible = false;
+      playAgainText.visible = false;
+    
+      winText.visible=false;
+      heart1.visible = true;
+      heart2.visible = true;
+      heart3.visible = true;
+      heart4.visible = true;
+      heart5.visible = true;
+      heart6.visible = true;
+      heart7.visible = true;
+      heart8.visible = true;
+      heart9.visible = true;
+      heart10.visible = true;
+      heart11.visible = false;
+      heart12.visible = false;
+      heart13.visible = false;
+      heart14.visible = false;
+      heart15.visible = false;
+      heart16.visible = false;
+      heart17.visible = false;
+      heart18.visible = false;
+      heart19.visible = false;
+      heart20.visible = false;
+
+      //玩家
+      player = this.physics.add.sprite(100, 300, 'dude');
+      player.setBounce(0.2);
+      player.setCollideWorldBounds(true);
+      player.body.allowGravity = false;
+
+      this.anims.create({
+        key: 'left',
+        frames: [{ key: 'dude', frame: 0 }],
+        frameRate: 20
+      });
+      this.anims.create({
+        key: 'up',
+        frames: [{ key: 'dude', frame: 0 }],
+        frameRate: 20
+      });
+      this.anims.create({
+        key: 'down',
+        frames: [{ key: 'dude', frame: 4 }],
+        frameRate: 20
+      });
+
+      this.anims.create({
+        key: 'turn',
+        frames: [{ key: 'dude', frame: 0 }],
+        frameRate: 20
+      });
+      this.anims.create({
+        key: 'right',
+        frames: this.anims.generateFrameNumbers('dude', { start: 1, end: 3 }),
+        frameRate: 10,
+        repeat: -1
+      });
+
+      //enemy1
+      this.anims.create({
+        key: 'enemyAnimation',
+        frames: [
+          { key: 'enemy', frame: 0 },
+          { key: 'enemy', frame: 1 },
+          { key: 'enemy', frame: 2 }
+        ],
+        frameRate: 10,
+        repeat: -1
+      });
+
+      //enemy2
+      this.anims.create({
+        key: 'enemy2Animation',
+        frames: [
+          { key: 'enemy2', frame: 6 },
+          { key: 'enemy2', frame: 7 },
+          { key: 'enemy2', frame: 8 }
+        ],
+        frameRate: 10, 
+        repeat: -1 
+      });
+
+
+
+      cursors = this.input.keyboard.createCursorKeys();
+      this.input.keyboard.on('keydown-C', (event) => {
+        if (!gameOver) {
+          const currentTime = this.time.now;
+
+          if (currentTime - lastShotTime >= 250) {
+            const bullet = this.physics.add.sprite(player.x + 10, player.y, 'bullet');
+            bullet.setVelocityX(500);
+            shoot.play();
+            this.physics.add.collider(bullet, enemy, bulletHitEnemy, null, this);
+            this.physics.add.collider(bullet, enemy2, bulletHitEnemy2, null, this);
+            this.physics.add.collider(bullet, boss, bulletHitBoss, null, this);
+            lastShotTime = currentTime;
+          }
+        }
+
+
+      });
+      cursors = this.input.keyboard.createCursorKeys();
+      this.input.keyboard.on('keydown-J', function () {
+        player.setPosition(3200, player.y);
+        this.cameras.main.scrollX = 3200;
+      }, this);
+
+      cursors = this.input.keyboard.createCursorKeys();
+      this.input.keyboard.on('keydown-K', function () {
+       bosshp=1;
+      }, this);
+
+
+      enemy = this.physics.add.group({
+        key: 'enemy',
+        repeat: 0,
+        setXY: { x: 0, y: 0 },
+        createCallback: function (enemy) {
+          enemy.hp = 100;
+        }
+
+      });
+
+      enemy2 = this.physics.add.group({
+        key: 'enemy2',
+        repeat: 0,
+        setXY: { x: 0, y: 0 },
+        createCallback: function (enemy2) {
+          enemy2.hp = 40;
+        }
+
+      });
+      //3900 480
+      bullet = this.physics.add.group();
+
+
+      boss = this.physics.add.sprite(3900, 480, 'boss');
+      boss.setScale(2.5);
+      // boss.setCollideWorldBounds(true);
+      boss.setBounce(0);
+      boss.body.setImmovable(true);
+
+      this.anims.create({
+        key: 'bossMoveLeft',
+        frames: this.anims.generateFrameNumbers('boss', { start: 0, end: 2 }),
+        frameRate: 10,
+        repeat: -1
+      });
+
+      this.anims.create({
+        key: 'bossMoveRight',
+        frames: this.anims.generateFrameNumbers('boss', { start: 2, end: 0 }),
+        frameRate: 10,
+        repeat: -1
+      });
+
+
+      this.time.addEvent({
+        delay: 1500,
+        callback: bossAttack,
+        callbackScope: this,
+        loop: true
+      });
+
+
+
+      this.time.addEvent({
+        delay: 1500 + Math.floor(Math.random() * 1500),
+        loop: true,
+        callback: createEnemy,
+        callbackScope: this
+      });
+
+      this.time.addEvent({
+        delay: 3000 + Math.floor(Math.random() * 3000),
+        loop: true,
+        callback: createEnemy2,
+        callbackScope: this
+      });
+
+      this.physics.add.collider(enemy, platforms);
+      this.physics.add.collider(player, enemy, hitBomb, null, this);
+
+      this.physics.add.collider(enemy2, platforms);
+      this.physics.add.collider(player, enemy2, hitBomb2, null, this);
+
+      this.physics.add.collider(player, boss, hitBomb3, null, this);
+
+      playAgainText.setInteractive();
+      playAgainText.on('pointerover', function () {
+        playAgainText.setScale(1.2);
+      });
+
+      playAgainText.on('pointerout', function () {
+        playAgainText.setScale(1);
+      });
+
+     
+    }
+    //------------------------------------------------------------------------------
+
+    function update(time, delta) {
+      console.log(bosshp)
+      if (startqq == true) {
+        const self = this;
+        let velocityX = 0;
+        let velocityY = 0;
+
+
+        if (win === false) {
+          if (boss.frame.name === 0) {
+            this.tweens.add({
+              targets: boss,
+              x: boss.x - 550,
+              duration: 4000,
+              onComplete: function () {
+                if (win === false) {
+                  boss.anims.play('bossMoveRight');
+                }
+              }
+            });
+          } else if (boss.frame.name === 2) {
+            this.tweens.add({
+              targets: boss,
+              x: boss.x + 550,
+              duration: 4000,
+              onComplete: function () {
+                if (win === false) {
+                  boss.anims.play('bossMoveLeft');
+                  boss.frame.name === 1;
+                }
+              }
+            });
+          }
+        }
+        else{
+          winText.visible=true;
+          bullet.destroy();
+         
+        }
+
+
+
+        if (lives > 0) {
+          const scrollSpeed = 80;
+          const bgWidth = 4000;
+          this.cameras.main.scrollX += (scrollSpeed * (delta / 1000));
+
+
+          if(this.cameras.main.scrollX>2600&&isMusic==false){
+           bgMusic.stop();
+           bossmusic.play();
+           isMusic=true;
+          }
+
+
+          if (this.cameras.main.scrollX >= bgWidth - this.cameras.main.width) {
+            this.cameras.main.scrollX = bgWidth - this.cameras.main.width;
+          }
+
+          this.physics.world.setBounds(10 + this.cameras.main.scrollX, 0, 800, 600);
+          // console.log(this.cameras.main.scrollX);
+          /*
+          if (bullet.x > this.cameras.main.scrollX + config.width) {
+            bullet.destroy(); 
+          }
+          */
+
+          if (cursors.left.isDown) {
+            velocityX -= 160;
+            player.anims.play('left', true);
+          }
+          if (cursors.right.isDown) {
+            velocityX += 320;
+            player.anims.play('right', true);
+          }
+
+          if (cursors.up.isDown) {
+            velocityY -= 240;
+            player.anims.play('right', true);
+          }
+          if (cursors.down.isDown) {
+            velocityY += 240;
+            player.anims.play('right', true);
+          }
+          if (velocityX === 0 && velocityY === 0) {
+            player.anims.play('turn');
+          }
+          player.setVelocity(velocityX, velocityY);
+          enemy.setVelocityX(-150);
+          enemy2.setVelocityX(-400);
+        }
+        enemy.getChildren().forEach(function (enemy) {
+          if (enemy.x < self.cameras.main.scrollX && !enemy.isScored) {
+            score -= 3;
+            if (score <= 0) {
+              score = 0;
+            }
+            scoreText.setText(score);
+            enemy.isScored = true;
+          }
+        });
+        enemy2.getChildren().forEach(function (enemy2) {
+          if (enemy2.x < self.cameras.main.scrollX && !enemy2.isScored) {
+            score -= 3;
+            if (score <= 0) {
+              score = 0;
+            }
+            scoreText.setText(score);
+            enemy2.isScored = true;
+          }
+        });
+
+
+        playAgainText.setInteractive().on('pointerdown', (pointer, localX, localY, event) => {
+          gameOverText.setVisible(false);
+          playAgainText.setVisible(false);
+          winText.setVisible(false);
+          restartgame();
+          this.cameras.main.scrollX = 0;
+        });
+      
+      }
+    }
+  </script>
+</body>
+
+</html>

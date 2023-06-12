@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>change_page_question</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <script src="./assets/js/startScene.js"></script>
+    <script src="./assets/js/settingScene.js"></script>
+    <script src="./assets/js/levelScene.js"></script>
+    <script src="./assets/js/selectScene.js"></script>
+    <script src="./assets/js/baggerScene.js"></script>
+    <script src="./assets/js/studentScene.js"></script>
+    <script src="./assets/js/frogScene.js"></script>
+    <script src="./assets/js/gameoverScene.js"></script>
+    <script src="./assets/js/victoryScene.js"></script>
+
+    <script src="./assets/js/common.js"></script>
+
+    <style>
+        #container {
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="container">
+        <script>
+            const config = {
+                type: Phaser.AUTO,
+                scale: {
+                    mode: Phaser.Scale.FIT,
+                    autoCenter: Phaser.Scale.CENTER_BOTH,
+                    width: 1200,
+                    height: 800
+                },
+                scene: [startScene, settingScene, selectScene, levelScene, baggerScene, studentScene, gameoverScene, victoryScene],
+            };
+            const game = new Phaser.Game(config);
+        </script>
+    </div>
+</body>
+
+</html>

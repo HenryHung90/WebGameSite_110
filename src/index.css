@@ -1,0 +1,11 @@
+body{
+    margin:0 auto;
+    margin-top:-25px;
+    height: 100%;
+    width: 100%;
+}
+
+@font-face {
+    font-family: 'pixel font';
+    src: url('../public/font/Pixel.ttf');
+}

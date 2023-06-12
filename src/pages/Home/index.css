@@ -1,0 +1,194 @@
+.CenterBox{
+    position: absolute;
+    margin: 0;
+    top: 0;
+    left:0;
+    height:100%;
+    width:100%;
+    background-color: antiquewhite;
+    border-radius: 1px;
+    box-shadow: 0px 0px 0px 8px rgba(0,0,0,0.3); 
+    display: none;
+}
+
+/* 組別照片 */
+.ShortCutBox{
+    background-position: center;
+    transition-duration: .5s;
+    z-index: 0;
+    opacity: 0.3;
+    width:200px;
+    height:100%;
+}
+.ShortCutBox:hover{
+    transition-duration: .5s;
+    width:250px;
+    opacity: 1;
+}
+
+#ShortCutBox_01 ,#GroupCard_01{
+    background-image: url('../components/image/G01.png');
+     background-size: cover;
+}
+#ShortCutBox_02 ,#GroupCard_02{
+    background-image:url('../components/image/G02.png');
+     background-size: cover;
+}
+#ShortCutBox_03 ,#GroupCard_03{
+    background-image:url('../components/image/G03.png');
+     background-size: cover;
+}
+#ShortCutBox_04 ,#GroupCard_04{
+    background-image:url('../components/image/G04.png');
+    background-size: cover;
+}
+#ShortCutBox_05 ,#GroupCard_05{
+    background-image:url('../components/image/G05.png');
+    background-size: cover;
+}
+#ShortCutBox_06 ,#GroupCard_06{
+    background-image:url('../components/image/G06.png');
+     background-size: cover;
+}
+#ShortCutBox_07 ,#GroupCard_07{
+    background-image:url('../components/image/G07.png');
+}
+#ShortCutBox_08 ,#GroupCard_08{
+    background-image:url('../components/image/G08.png');
+}
+#ShortCutBox_09 ,#GroupCard_09{
+    background-image:url('../components/image/G09.png');
+}
+#ShortCutBox_10 ,#GroupCard_10{
+    background-image:url('../components/image/G10.png');
+}
+#ShortCutBox_11 ,#GroupCard_11{
+    background-image:url('../components/image/G11.png');
+}
+/* ******** */
+#HomeTitle{
+    font-family: 'pixel font';
+    user-select: none;
+    -webkit-text-stroke: 1px rgb(79, 84, 126);
+    color: white;
+    z-index: 100;
+    white-space: nowrap;
+    position: absolute;
+    top:50%;
+    left:50%;
+    margin:auto;
+    overflow: hidden;
+    transform: translateY(-50%);
+    transform: translateX(-50%);
+    font-size:7em;
+    width:900px;
+    animation:typing 2s steps(1100, end),
+    blink-caret 2s steps(300, end);
+}
+#HomeUser{
+  color:white;
+  text-align:center;
+  margin-top:70px;
+  font-size:50px;
+  opacity: 0;
+}
+@keyframes typing {
+  0% {
+    width: 0;
+  }
+  30%{
+    width:250px;
+  }
+  50%{
+    width:500px;
+  }
+  80%{
+    width: 800px;
+  }
+  100% {
+    width: 900px;
+  }
+}
+@keyframes blink-caret {
+  from,
+  to {
+    box-shadow: 5px 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: 5px 0 0 0;
+  }
+}
+#HomeBackground{
+    display:flex;
+    height:100%;
+    z-index: -100;
+}
+
+#HomeMenu{
+  z-index: 99999;
+  position:fixed;
+  top:0;
+  width:100%;
+  height:auto;
+  opacity: 0;
+}
+
+/***************Group File*****************/
+.HomeGroupFileBox{
+    height:250%;
+}
+.GroupLine{
+    display:flex;
+    padding:50px 150px 0 150px;
+    justify-content: space-between;
+    opacity: 0;
+}
+#Line_4{
+    justify-content: space-around;
+}
+.Group{
+    display: inline;
+}
+.GroupCard{
+    background-position: center;
+    background-size: cover;
+    width:297px;
+    height:420px;
+    background-color:lightblue;
+    text-align:center;
+    border-radius:20px 20px 20px 20px;
+}
+.GroupMouse{
+  z-index: 100;
+  position:absolute;
+  background-color:rgba(0,0,0,0);
+  width:297px;
+  height:420px;
+}
+.GroupCard_Text{
+    z-index: 99;
+    user-select:none;
+    text-align:center;
+    margin-top: -180px;;
+    padding-top:10px;
+    width:297px;
+    height:170px;
+    background-color:white;
+    opacity: 0.9;
+    border-radius:20px 20px 20px 20px;
+    display: none;
+}
+.GroupCard_GroupNumber{
+    margin-bottom: -20px;
+}
+.GroupCard_GroupMember{
+    margin-top:-10px;
+    font-size:20px;
+}
+
+#LogoutButton{
+   left:47%;
+}
+#HomeContainer{
+  padding-bottom: 50px;
+}
